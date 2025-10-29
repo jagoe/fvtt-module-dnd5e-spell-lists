@@ -18,7 +18,15 @@
     "packs": [],
     "packFolders": [],
     "relationships": {
-        "systems": [],
+        "systems": [
+            {
+                "id": "dnd5e",
+                "type": "system",
+                "compatibility": {
+                    "verified": 5.1
+                }
+            }
+        ],
         "requires": []
     },
     "languages": [

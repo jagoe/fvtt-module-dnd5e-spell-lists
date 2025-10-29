@@ -1,16 +1,22 @@
 {
     "printWidth": 80,
     "tabWidth": 4,
+    "semi": false,
     "overrides": [
         {
-            "files": ["*.scss", "*.css"],
+            "files": [
+                "*.scss",
+                "*.css"
+            ],
             "options": {
                 "requirePragma": false,
                 "parser": "scss"
             }
         },
         {
-            "files": ["*.yml"],
+            "files": [
+                "*.yml"
+            ],
             "options": {
                 "tabWidth": 2
             }

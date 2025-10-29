@@ -1,0 +1,10 @@
+<ul class="spell-lists">
+    {{#each lists}}
+        <li
+            class="spell-list {{#if this.isActive}}active{{/if}}"
+            data-list-id="{{this.id}}"
+        >
+            <span class="list-name">{{this.name}}</span>
+        </li>
+    {{/each}}
+</ul>

@@ -1,3 +1,30 @@
-.nothing-to-use {
-    font-size: large;
+ul.spell-lists {
+    margin: 0;
+    list-style: none;
+
+    justify-content: space-evenly;
+    font-family: var(--dnd5e-font-roboto);
+    text-transform: uppercase;
+    font-size: var(--font-size-13);
+    font-weight: bold;
+    align-items: start;
+    border: none;
+
+    .spell-list {
+        flex: 1;
+        padding: 0;
+        line-height: 1;
+        color: var(--color-text-secondary);
+        text-align: center;
+        cursor: var(--cursor-pointer);
+
+        &:hover {
+            text-shadow: 0 0 10px var(--color-shadow-primary);
+        }
+
+        &.active {
+            color: var(--color-text-primary);
+            text-shadow: none;
+        }
+    }
 }
