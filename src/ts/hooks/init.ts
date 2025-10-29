@@ -10,11 +10,7 @@ const Init: Listener = {
             new Settings().register();
             new HandlebarHelpers().register();
 
-            (game.modules.get(MODULE_ID) as ThisModule).api = {
-                test(): void {
-                    console.log("Cool");
-                },
-            };
+            (game.modules.get(MODULE_ID) as ThisModule).api = {};
         });
     },
 };

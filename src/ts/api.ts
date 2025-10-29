@@ -4,8 +4,6 @@ interface ThisModule extends Module {
     api: ThisApi;
 }
 
-interface ThisApi {
-    test(): void;
-}
+interface ThisApi {}
 
 export { type ThisModule, type ThisApi };

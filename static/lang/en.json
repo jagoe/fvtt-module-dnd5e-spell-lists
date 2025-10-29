@@ -1,10 +1,5 @@
 {
     "ModuleTemplate": {
-        "Settings": {
-            "SampleSetting": {
-                "Name": "Sample Setting Name",
-                "Hint": "Sample setting hint"
-            }
-        }
+        "Settings": {}
     }
 }
