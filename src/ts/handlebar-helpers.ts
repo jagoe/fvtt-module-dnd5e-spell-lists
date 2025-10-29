@@ -4,4 +4,4 @@ class HandlebarHelpers {
     register(): void {}
 }
 
-export { HandlebarHelpers };
+export { HandlebarHelpers }

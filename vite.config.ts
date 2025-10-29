@@ -1,39 +1,39 @@
-import * as Vite from "vite"
-import checker from "vite-plugin-checker"
-import esbuild from "esbuild"
-import fs from "fs"
-import path from "path"
-import tsconfigPaths from "vite-tsconfig-paths"
-import { viteStaticCopy } from "vite-plugin-static-copy"
-import packageJSON from "./package.json" with { type: "json" }
+import * as Vite from 'vite'
+import checker from 'vite-plugin-checker'
+import esbuild from 'esbuild'
+import fs from 'fs'
+import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
+import packageJSON from './package.json' with { type: 'json' }
 
-const PACKAGE_ID = "modules/fvtt-module-dnd5e-spell-lists"
+const PACKAGE_ID = 'modules/fvtt-module-dnd5e-spell-lists'
 
 const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
     const buildMode =
-        mode === "production"
-            ? "production"
-            : mode === "stage"
-              ? "stage"
-              : "development"
-    const outDir = "dist"
+        mode === 'production'
+            ? 'production'
+            : mode === 'stage'
+              ? 'stage'
+              : 'development'
+    const outDir = 'dist'
     const plugins = [checker({ typescript: true }), tsconfigPaths()]
 
     console.log(`Build mode: ${buildMode}`)
 
-    if (buildMode === "production") {
+    if (buildMode === 'production') {
         plugins.push(
             minifyPlugin(),
             deleteLockFilePlugin(),
             ...viteStaticCopy({
-                targets: [{ src: "README.md", dest: "." }],
+                targets: [{ src: 'README.md', dest: '.' }],
             }),
         )
-    } else if (buildMode === "stage") {
+    } else if (buildMode === 'stage') {
         plugins.push(
             minifyPlugin(),
             ...viteStaticCopy({
-                targets: [{ src: "README.md", dest: "." }],
+                targets: [{ src: 'README.md', dest: '.' }],
             }),
         )
     } else {
@@ -44,28 +44,28 @@ const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
     }
 
     // Create dummy files for vite dev server
-    if (command === "serve") {
+    if (command === 'serve') {
         const message =
-            "This file is for a running vite dev server and is not copied to a build"
-        fs.writeFileSync("./index.html", `<h1>${message}</h1>\n`)
-        if (!fs.existsSync("./styles")) fs.mkdirSync("./styles")
+            'This file is for a running vite dev server and is not copied to a build'
+        fs.writeFileSync('./index.html', `<h1>${message}</h1>\n`)
+        if (!fs.existsSync('./styles')) fs.mkdirSync('./styles')
         fs.writeFileSync(
-            "./styles/fvtt-module-dnd5e-spell-lists.css",
+            './styles/fvtt-module-dnd5e-spell-lists.css',
             `/** ${message} */\n`,
         )
         fs.writeFileSync(
-            "./fvtt-module-dnd5e-spell-lists.mjs",
+            './fvtt-module-dnd5e-spell-lists.mjs',
             `/** ${message} */\n\nwindow.global = window;\nimport "./src/ts/module.ts";\n`,
         )
-        fs.writeFileSync("./vendor.mjs", `/** ${message} */\n`)
+        fs.writeFileSync('./vendor.mjs', `/** ${message} */\n`)
     }
 
     return {
         base:
-            command === "build"
-                ? "./"
+            command === 'build'
+                ? './'
                 : `/modules/fvtt-module-dnd5e-spell-lists/`,
-        publicDir: "static",
+        publicDir: 'static',
         define: {
             BUILD_MODE: JSON.stringify(buildMode),
         },
@@ -74,12 +74,12 @@ const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
             outDir,
             emptyOutDir: false,
             minify: false,
-            sourcemap: buildMode === "development",
+            sourcemap: buildMode === 'development',
             lib: {
-                name: "fvtt-module-dnd5e-spell-lists",
-                entry: "src/ts/module.ts",
-                formats: ["es"],
-                fileName: "module",
+                name: 'fvtt-module-dnd5e-spell-lists',
+                entry: 'src/ts/module.ts',
+                formats: ['es'],
+                fileName: 'module',
             },
             rollupOptions: {
                 external: [
@@ -88,9 +88,9 @@ const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
                     /^@common\//,
                 ],
                 output: {
-                    assetFileNames: "styles/fvtt-module-dnd5e-spell-lists.css",
-                    chunkFileNames: "[name].mjs",
-                    entryFileNames: "fvtt-module-dnd5e-spell-lists.mjs",
+                    assetFileNames: 'styles/fvtt-module-dnd5e-spell-lists.css',
+                    chunkFileNames: '[name].mjs',
+                    entryFileNames: 'fvtt-module-dnd5e-spell-lists.mjs',
                     manualChunks: {
                         vendor: Object.keys(packageJSON.dependencies)
                             ? Object.keys(packageJSON.dependencies)
@@ -98,7 +98,7 @@ const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
                     },
                 },
             },
-            target: "es2022",
+            target: 'es2022',
         },
 
         // About server options:
@@ -116,28 +116,28 @@ const config = Vite.defineConfig(({ command, mode }): Vite.UserConfig => {
             port: 30001,
             open: false,
             proxy: {
-                "^(?!/modules/fvtt-module-dnd5e-spell-lists/)":
-                    "http://localhost:30000/",
-                "/socket.io": {
-                    target: "ws://localhost:30000",
+                '^(?!/modules/fvtt-module-dnd5e-spell-lists/)':
+                    'http://localhost:30000/',
+                '/socket.io': {
+                    target: 'ws://localhost:30000',
                     ws: true,
                 },
             },
         },
         plugins,
         css: {
-            devSourcemap: buildMode === "development",
+            devSourcemap: buildMode === 'development',
         },
     }
 })
 
 function minifyPlugin(): Vite.Plugin {
     return {
-        name: "minify",
+        name: 'minify',
         renderChunk: {
-            order: "post",
+            order: 'post',
             async handler(code, chunk) {
-                return chunk.fileName.endsWith(".mjs")
+                return chunk.fileName.endsWith('.mjs')
                     ? esbuild.transform(code, {
                           keepNames: true,
                           minifyIdentifiers: false,
@@ -152,37 +152,39 @@ function minifyPlugin(): Vite.Plugin {
 
 function deleteLockFilePlugin(): Vite.Plugin {
     return {
-        name: "delete-lock-file-plugin",
+        name: 'delete-lock-file-plugin',
         resolveId(source) {
-            return source === "virtual-module" ? source : null
+            return source === 'virtual-module' ? source : null
         },
         writeBundle(outputOptions) {
-            const outDir = outputOptions.dir ?? ""
+            const outDir = outputOptions.dir ?? ''
             const lockFile = path.resolve(
                 outDir,
-                "fvtt-module-dnd5e-spell-lists.lock",
+                'fvtt-module-dnd5e-spell-lists.lock',
             )
-            fs.rmSync(lockFile)
+            if (fs.existsSync(lockFile)) {
+                fs.rmSync(lockFile)
+            }
         },
     }
 }
 
 function handleHotUpdateForEnLang(outDir: string): Vite.Plugin {
     return {
-        name: "hmr-handler-en-lang",
-        apply: "serve",
+        name: 'hmr-handler-en-lang',
+        apply: 'serve',
         handleHotUpdate(context) {
             if (context.file.startsWith(outDir)) return
-            if (!context.file.endsWith("en.json")) return
+            if (!context.file.endsWith('en.json')) return
 
-            const basePath = context.file.slice(context.file.indexOf("lang/"))
+            const basePath = context.file.slice(context.file.indexOf('lang/'))
             console.log(`Updating lang file at ${basePath}`)
             fs.promises
                 .copyFile(context.file, `${outDir}/${basePath}`)
                 .then(() => {
                     context.server.ws.send({
-                        type: "custom",
-                        event: "lang-update",
+                        type: 'custom',
+                        event: 'lang-update',
                         data: { path: `${PACKAGE_ID}/${basePath}` },
                     })
                 })
@@ -192,22 +194,22 @@ function handleHotUpdateForEnLang(outDir: string): Vite.Plugin {
 
 function handleHotUpdateForHandlebars(outDir: string): Vite.Plugin {
     return {
-        name: "hmr-handler-handlebars",
-        apply: "serve",
+        name: 'hmr-handler-handlebars',
+        apply: 'serve',
         handleHotUpdate(context) {
             if (context.file.startsWith(outDir)) return
-            if (!context.file.endsWith(".hbs")) return
+            if (!context.file.endsWith('.hbs')) return
 
             const basePath = context.file.slice(
-                context.file.indexOf("templates/"),
+                context.file.indexOf('templates/'),
             )
             console.log(`Updating template file at ${basePath}`)
             fs.promises
                 .copyFile(context.file, `${outDir}/${basePath}`)
                 .then(() => {
                     context.server.ws.send({
-                        type: "custom",
-                        event: "template-update",
+                        type: 'custom',
+                        event: 'template-update',
                         data: { path: `${PACKAGE_ID}/${basePath}` },
                     })
                 })

@@ -1,13 +1,13 @@
-import { ApplicationRenderOptions } from "@client/applications/_module.mjs"
-import { log } from "../util/log.ts"
-import { Listener } from "./index.ts"
-import { ApplicationV2 } from "@client/applications/api/_module.mjs"
-import { TEMPLATE_PATH } from "../constants.ts"
+import { ApplicationRenderOptions } from '@client/applications/_module.mjs'
+import { log } from '../util/log.ts'
+import { Listener } from './index.ts'
+import { ApplicationV2 } from '@client/applications/api/_module.mjs'
+import { TEMPLATE_PATH } from '../constants.ts'
 
 const RenderActorSheet: Listener = {
     listen(): void {
         Hooks.on(
-            "renderCharacterActorSheet",
+            'renderCharacterActorSheet',
             async (
                 _app: ApplicationV2,
                 html: HTMLElement,
@@ -17,10 +17,10 @@ const RenderActorSheet: Listener = {
                 const spellsTab = html.querySelector(
                     '[data-application-part="spells"]',
                 )
-                const header = spellsTab?.querySelector(".top")
+                const header = spellsTab?.querySelector('.top')
 
                 if (!header) {
-                    log.warn("Could not find spells tab or header element")
+                    log.warn('Could not find spells tab or header element')
                     return
                 }
 
@@ -28,10 +28,22 @@ const RenderActorSheet: Listener = {
                 // TODO: When saving, auto-create id by snakecasing name and ensuring uniqueness
                 const lists = [
                     {
-                        name: "Default",
-                        id: "default",
+                        name: 'Default',
+                        id: 'default',
                         order: 0,
                         isActive: true,
+                    },
+                    {
+                        name: 'Aggressive',
+                        id: 'aggressive',
+                        order: 1,
+                        isActive: false,
+                    },
+                    {
+                        name: 'Support',
+                        id: 'support',
+                        order: 2,
+                        isActive: false,
                     },
                 ].sort((a, b) => a.order - b.order)
 
@@ -41,7 +53,7 @@ const RenderActorSheet: Listener = {
                         { lists },
                     )
 
-                header.insertAdjacentHTML("afterend", renderedTemplate)
+                header.insertAdjacentHTML('afterend', renderedTemplate)
             },
         )
     },

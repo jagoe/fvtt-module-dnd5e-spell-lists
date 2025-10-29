@@ -1,25 +1,25 @@
-import { MODULE_NAME } from "../constants.ts"
+import { MODULE_NAME } from '../constants.ts'
 
-type logLevel = "trace" | "info" | "warn" | "error"
+type logLevel = 'trace' | 'info' | 'warn' | 'error'
 
 function trace(...args: unknown[]): void {
-    print("info", ...args)
+    print('info', ...args)
 }
 
 function info(...args: unknown[]): void {
-    print("info", ...args)
+    print('info', ...args)
 }
 
 function warn(...args: unknown[]): void {
-    print("warn", ...args)
+    print('warn', ...args)
 }
 
 function error(...args: unknown[]): void {
-    print("error", ...args)
+    print('error', ...args)
 }
 
-function print(level: logLevel = "info", ...args: unknown[]): void {
-    const fn = level === "info" ? console.log : console[level]
+function print(level: logLevel = 'info', ...args: unknown[]): void {
+    const fn = level === 'info' ? console.log : console[level]
 
     fn(`Foundry VTT | Module ${MODULE_NAME} |`, ...args)
 }

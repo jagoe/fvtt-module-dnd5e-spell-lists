@@ -1,9 +1,11 @@
-import type Module from "@client/packages/module.d.mts";
+import type Module from '@client/packages/module.d.mts'
 
 interface ThisModule extends Module {
-    api: ThisApi;
+    api: ThisApi
 }
 
-interface ThisApi {}
+interface ThisApi {
+    noop(): void
+}
 
-export { type ThisModule, type ThisApi };
+export { type ThisModule, type ThisApi }

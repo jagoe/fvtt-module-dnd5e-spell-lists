@@ -1,6 +1,6 @@
-import { Init } from "./init.ts"
-import { RenderActorSheet } from "./renderActorSheet.ts"
-import { Setup } from "./setup.ts"
+import { Init } from './init.ts'
+import { RenderActorSheet } from './renderActorSheet.ts'
+import { Setup } from './setup.ts'
 
 interface Listener {
     listen(): void

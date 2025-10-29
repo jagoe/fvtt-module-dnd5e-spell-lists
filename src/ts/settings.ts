@@ -22,4 +22,4 @@ class Settings {
     // }
 }
 
-export { Settings };
+export { Settings }
