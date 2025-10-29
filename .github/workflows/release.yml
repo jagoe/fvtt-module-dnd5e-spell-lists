@@ -38,21 +38,40 @@ jobs:
         env:
           version: ${{steps.get_version.outputs.version-without-v}}
           manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
-          download: https://github.com/${{github.repository}}/releases/download/${{steps.get_version.outputs.version}}/dfreds-module-template-ts.zip
+          download: https://github.com/${{github.repository}}/releases/download/${{steps.get_version.outputs.version}}/fvtt-module-dnd5e-spell-lists.zip
 
       - name: Zip files
         working-directory: ./dist
-        run: zip -r ./dfreds-module-template-ts.zip ./*
+        run: zip -r ./fvtt-module-dnd5e-spell-lists.zip ./*
 
       - name: Create versioned release
         id: create_version_release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
-          artifacts: "./dist/module.json, ./dist/dfreds-module-template-ts.zip"
+          artifacts: "./dist/module.json, ./dist/fvtt-module-dnd5e-spell-lists.zip"
           body: "${{ github.event.release.body }}"
           draft: true
           generateReleaseNotes: true
           name: ${{ github.event.release.name }}
           tag: ${{ github.event.release.tag_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add new package version on Foundry
+        if: ${{ ! github.event.release.prerelease }}
+        run: |
+          curl -X POST \
+            https://api.foundryvtt.com/_api/packages/release_version/ \
+            --header "Content-Type: application/json" \
+            --header "Authorization: ${{secrets.FOUNDRY_PACKAGE_RELEASE_TOKEN}}" \
+            --data-binary @- <<EOF
+            {
+              "id": "${{steps.get_module_data.outputs.id}}",
+              "release": {
+                "version": "${{steps.get_version.outputs.version-without-v}}",
+                "manifest": "https://github.com/jagoe/fvtt-module-automated-combat-notes/releases/download/${{github.event.release.tag_name}}/module.json",
+                "notes": "https://github.com/jagoe/fvtt-module-automated-combat-notes/releases/tag/${{github.event.release.tag_name}}",
+                "compatibility": ${{steps.get_module_data.outputs.compatibility}}
+              }
+            }
+          EOF

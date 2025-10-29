@@ -1,7 +1,7 @@
 {
-    "name": "dfreds-module-template-ts",
+    "name": "fvtt-module-dnd5e-spell-lists",
     "version": "1.0.0",
-    "description": "A FoundryVTT module template using Typescript",
+    "description": "Extends the D&D 5e spells tab to allow for creating and switching between different lists of prepared spells.",
     "private": true,
     "type": "module",
     "scripts": {
@@ -22,7 +22,7 @@
         "lint:json": "eslint ./static --ext .json --no-eslintrc --plugin json --rule \"json/*: error\" --rule \"linebreak-style: error\"",
         "lint:fix": "eslint ./src --ext .ts --fix && prettier --write src/styles"
     },
-    "author": "DFreds (https://github.com/DFreds)",
+    "author": "JG (https://github.com/jagoe)",
     "license": "MIT",
     "engines": {
         "node": ">=20.15.0"
