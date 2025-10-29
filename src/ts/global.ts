@@ -97,6 +97,14 @@ declare global {
             : [T, HTMLElement, C, ApplicationRenderOptions]
     >
 
+    type CharacterActorSheet = ApplicationV2 & {
+        getData(): CharacterActorSheetData
+    }
+
+    type CharacterActorSheetData = ApplicationRenderContext & {
+        actor?: Character | null
+    }
+
     type Character = Actor & {}
     class Hooks extends HooksType {
         static on(...args: HookParamsSetup): number
@@ -184,7 +192,10 @@ declare global {
         static on(...args: HookParamsGetProseMirrorMenuDropDowns): number
         static on(...args: HookParameters<string, unknown[]>): number
         static on(
-            ...args: HookParamsRender<ApplicationV2, 'CharacterActorSheet'>
+            ...args: HookParamsRender<
+                CharacterActorSheet,
+                'CharacterActorSheet'
+            >
         ): number
     }
 

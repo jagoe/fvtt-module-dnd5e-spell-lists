@@ -1,10 +1,16 @@
-<ul class="spell-lists">
-    {{#each lists}}
-        <li
-            class="spell-list {{#if this.isActive}}active{{/if}}"
-            data-list-id="{{this.id}}"
-        >
-            <span class="list-name">{{this.name}}</span>
+<section class="spell-lists-container">
+    <ul class="spell-lists">
+        {{#each lists}}
+            <li
+                class="spell-list {{#if this.isActive}}active{{/if}}"
+                data-list-id="{{this.id}}"
+            >
+                <span class="list-name">{{this.name}}</span>
+            </li>
+        {{/each}}
+        <li class="spell-list add-spell-list">
+            {{!-- TODO: i18n --}}
+            <a class="fa-solid fa-plus" title="Add new spell list" data-action="add-spell-list" data-actor-id="{{actorId}}"></a>
         </li>
-    {{/each}}
-</ul>
+    </ul>
+</section>

@@ -1,6 +1,7 @@
-import { Init } from './init.ts'
-import { RenderActorSheet } from './renderActorSheet.ts'
-import { Setup } from './setup.ts'
+import { Init } from './foundryHooks/init.ts'
+import { RenderActorSheet } from './foundryHooks/renderActorSheet.ts'
+import { Setup } from './foundryHooks/setup.ts'
+import { AddSpellList } from './uiEvents/addSpellList.ts'
 
 interface Listener {
     listen(): void
@@ -8,7 +9,12 @@ interface Listener {
 
 const HooksModule: Listener = {
     listen(): void {
-        const listeners: Listener[] = [Init, Setup, RenderActorSheet]
+        const listeners: Listener[] = [
+            Init,
+            Setup,
+            RenderActorSheet,
+            AddSpellList,
+        ]
 
         for (const listener of listeners) {
             listener.listen()

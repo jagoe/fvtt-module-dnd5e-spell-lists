@@ -1,6 +1,6 @@
-import { Listener } from './index.ts'
+import { Listener } from '../index.ts'
 
-const Setup: Listener = {
+export const Setup: Listener = {
     listen(): void {
         Hooks.once('setup', () => {
             if (BUILD_MODE === 'development') {
@@ -9,5 +9,3 @@ const Setup: Listener = {
         })
     },
 }
-
-export { Setup }

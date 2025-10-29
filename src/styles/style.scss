@@ -1,29 +1,44 @@
 @layer modules {
-    ul.spell-lists {
-        margin: 0;
-        padding: 0;
-        list-style: none;
+    :root {
+    }
 
-        display: flex;
-        text-transform: uppercase;
-        font-weight: bold;
+    .spell-lists-container {
+        display: grid;
 
-        .spell-list {
-            flex: 1;
-            padding: 0;
-            line-height: 1;
-            color: var(--color-text-secondary);
-            cursor: var(--cursor-pointer);
-            flex-grow: initial;
-            padding: 0 5px;
+        ul.spell-lists {
+            margin: -10px 0;
+            padding: 10px 0;
+            list-style: none;
 
-            &:hover {
-                text-shadow: 0 0 10px var(--color-shadow-primary);
-            }
+            display: flex;
+            text-transform: uppercase;
+            font-weight: bold;
+            overflow-x: scroll;
 
-            &.active {
-                color: var(--color-text-primary);
-                text-shadow: none;
+            .spell-list {
+                flex: 1;
+                padding: 0 5px;
+                margin: auto 0;
+                line-height: 1;
+                color: var(--color-text-secondary);
+                cursor: var(--cursor-pointer);
+
+                &:hover {
+                    text-shadow: 0 0 10px var(--color-shadow-primary);
+                }
+
+                &.active {
+                    color: var(--color-text-primary);
+                    text-shadow: none;
+                }
+
+                &.add-spell-list {
+                    color: var(--color-text-primary);
+                }
+
+                .list-name {
+                    text-wrap: nowrap;
+                }
             }
         }
     }
