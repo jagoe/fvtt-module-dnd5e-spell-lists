@@ -68,6 +68,13 @@ export async function deleteSpellList(
 
     const spellLists = await getSpellLists(actorId)
     const updatedLists = spellLists.filter((list) => list.id !== listId)
+
+    if (!updatedLists.some((list) => list.isActive)) {
+        updatedLists.find(
+            (list) => list.id === DEFAULT_SPELL_LIST_ID,
+        )!.isActive = true
+    }
+
     await saveSpellLists(actorId, updatedLists)
 }
 
@@ -96,9 +103,17 @@ async function makeUnique(
 ): Promise<void> {
     const spellLists = await getSpellLists(actorId)
     const baseId = spellList.id
-    const entriesWithBaseIdCount = spellLists.filter(
-        (list) => list.id === baseId || list.id.startsWith(`${baseId}_`),
-    ).length
+    const highestCount =
+        spellLists.reduce((acc, list) => {
+            const regex = new RegExp(`^${baseId}_(\\d+)$`)
+            const match = list.id.match(regex)
+            if (!match) {
+                return acc
+            }
 
-    spellList.id = `${baseId}_${entriesWithBaseIdCount}`
+            const count = parseInt(match[1], 10)
+            return Math.max(acc, count)
+        }, 0) || 1
+
+    spellList.id = `${baseId}_${highestCount + 1}`
 }
