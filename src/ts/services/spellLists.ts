@@ -30,9 +30,7 @@ export async function saveSpellList(
         spellLists.push(spellList)
     }
 
-    await setActive(actorId, spellList.id)
-
-    await saveSpellLists(actorId, spellLists)
+    await activateSpellList(actorId, spellList.id)
 }
 
 export async function saveSpellLists(
@@ -73,7 +71,7 @@ export async function deleteSpellList(
     await saveSpellLists(actorId, updatedLists)
 }
 
-export async function setActive(
+export async function activateSpellList(
     actorId: string,
     listId: string,
 ): Promise<void> {

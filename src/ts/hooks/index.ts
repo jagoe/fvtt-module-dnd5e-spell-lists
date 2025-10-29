@@ -1,6 +1,7 @@
 import { Init } from './foundryHooks/init.ts'
 import { RenderActorSheet } from './foundryHooks/renderActorSheet.ts'
 import { Setup } from './foundryHooks/setup.ts'
+import { ActivateSpellList } from './uiEvents/activateSpellList.ts'
 import { AddSpellList } from './uiEvents/addSpellList.ts'
 
 interface Listener {
@@ -14,6 +15,7 @@ const HooksModule: Listener = {
             Setup,
             RenderActorSheet,
             AddSpellList,
+            ActivateSpellList,
         ]
 
         for (const listener of listeners) {
