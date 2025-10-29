@@ -1,30 +1,30 @@
-ul.spell-lists {
-    margin: 0;
-    list-style: none;
-
-    justify-content: space-evenly;
-    font-family: var(--dnd5e-font-roboto);
-    text-transform: uppercase;
-    font-size: var(--font-size-13);
-    font-weight: bold;
-    align-items: start;
-    border: none;
-
-    .spell-list {
-        flex: 1;
+@layer modules {
+    ul.spell-lists {
+        margin: 0;
         padding: 0;
-        line-height: 1;
-        color: var(--color-text-secondary);
-        text-align: center;
-        cursor: var(--cursor-pointer);
+        list-style: none;
 
-        &:hover {
-            text-shadow: 0 0 10px var(--color-shadow-primary);
-        }
+        display: flex;
+        text-transform: uppercase;
+        font-weight: bold;
 
-        &.active {
-            color: var(--color-text-primary);
-            text-shadow: none;
+        .spell-list {
+            flex: 1;
+            padding: 0;
+            line-height: 1;
+            color: var(--color-text-secondary);
+            cursor: var(--cursor-pointer);
+            flex-grow: initial;
+            padding: 0 5px;
+
+            &:hover {
+                text-shadow: 0 0 10px var(--color-shadow-primary);
+            }
+
+            &.active {
+                color: var(--color-text-primary);
+                text-shadow: none;
+            }
         }
     }
 }
