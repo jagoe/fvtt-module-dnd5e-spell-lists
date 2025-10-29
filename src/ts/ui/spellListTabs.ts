@@ -5,7 +5,7 @@ import {
     ContextMenuEntry,
     ContextMenuOptions,
 } from '@client/applications/ux/context-menu.mjs'
-import { deleteSpellList } from '../services/spellLists.ts'
+import { deleteSpellList, updateSpellList } from '../services/spellLists.ts'
 
 export async function createOrUpdateSpellListTabs(
     html: HTMLElement,
@@ -45,6 +45,35 @@ export async function createOrUpdateSpellListTabs(
     })
 
     const contextMenuItems: ContextMenuEntry[] = [
+        {
+            name: 'Rename Spell List', // TODO: i18n
+            icon: '<i class="fas fa-book"></i>',
+            callback: async (li: HTMLElement) => {
+                const spellListId = li.dataset.listId
+                if (!spellListId) {
+                    return
+                }
+
+                const data = await (
+                    foundry.applications.api
+                        .DialogV2 as unknown as DialogV2WithInput
+                ).input<{ name: string }>({
+                    window: { title: 'Spell List Name' },
+                    content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
+                    ok: {
+                        label: 'Update',
+                        icon: 'fa-solid fa-floppy-disk',
+                    },
+                })
+
+                const spellListName = data?.name
+                if (!spellListName) {
+                    return
+                }
+
+                updateSpellList(actorId, spellListId, { name: spellListName })
+            },
+        },
         {
             name: 'Delete Spell List', // TODO: i18n
             icon: '<i class="fas fa-trash"></i>',

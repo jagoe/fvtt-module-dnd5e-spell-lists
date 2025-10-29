@@ -30,7 +30,8 @@ export async function saveSpellList(
         spellLists.push(spellList)
     }
 
-    await activateSpellList(actorId, spellList.id)
+    await activateSpellList(spellList.id, spellLists)
+    await saveSpellLists(actorId, spellLists)
 }
 
 export async function saveSpellLists(
@@ -58,6 +59,26 @@ export async function getSpellLists(actorId: string): Promise<SpellList[]> {
     return spellLists || []
 }
 
+export async function updateSpellList(
+    actorId: string,
+    spellListId: string,
+    updatedList: Partial<SpellList>,
+): Promise<void> {
+    const spellLists = await getSpellLists(actorId)
+    const index = spellLists.findIndex((list) => list.id === spellListId)
+    if (index === -1) {
+        throw new Error(
+            `Spell list with ID ${updatedList.id} not found for actor ${actorId}`, // TODO: i18n
+        )
+    }
+
+    Object.entries(updatedList).forEach(([key, value]) => {
+        ;(spellLists[index] as any)[key] = value
+    })
+
+    await saveSpellLists(actorId, spellLists)
+}
+
 export async function deleteSpellList(
     actorId: string,
     listId: string,
@@ -67,27 +88,34 @@ export async function deleteSpellList(
     }
 
     const spellLists = await getSpellLists(actorId)
-    const updatedLists = spellLists.filter((list) => list.id !== listId)
-
-    if (!updatedLists.some((list) => list.isActive)) {
-        updatedLists.find(
-            (list) => list.id === DEFAULT_SPELL_LIST_ID,
-        )!.isActive = true
+    const listToDelete = spellLists.find((list) => list.id === listId)
+    if (!listToDelete) {
+        throw new Error(
+            `Spell list with ID ${listId} not found for actor ${actorId}`, // TODO: i18n
+        )
     }
 
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: 'Delete Spell List' }, // TODO: i18n
+        content: '<p>Are you sure you want to delete this spell list?</p>', // TODO: i18n
+    })
+    if (!confirmed) {
+        return
+    }
+
+    const updatedLists = spellLists.filter((list) => list.id !== listId)
+
+    await activateSpellList(DEFAULT_SPELL_LIST_ID, updatedLists)
     await saveSpellLists(actorId, updatedLists)
 }
 
 export async function activateSpellList(
-    actorId: string,
     listId: string,
+    spellLists: SpellList[],
 ): Promise<void> {
-    const spellLists = await getSpellLists(actorId)
     spellLists.forEach((list) => {
         list.isActive = list.id === listId
     })
-
-    await saveSpellLists(actorId, spellLists)
 }
 
 function toSnakeCase(str: string): string {

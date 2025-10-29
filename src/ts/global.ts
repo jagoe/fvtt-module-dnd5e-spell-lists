@@ -1,4 +1,8 @@
-import DialogV2 from '@client/applications/api/dialog.mjs'
+import DialogV2Class, {
+    DialogV2Button,
+    DialogV2Configuration,
+    DialogV2WaitOptions,
+} from '@client/applications/api/dialog.mjs'
 import CombatTrackerConfig from '@client/applications/apps/combat-tracker-config.mjs'
 import HeadsUpDisplayContainer from '@client/applications/hud/container.mjs'
 import { PlaceableHUDContext } from '@client/applications/hud/placeable-hud.mjs'
@@ -105,6 +109,15 @@ declare global {
         actor?: Character | null
     }
 
+    class DialogV2WithInput extends DialogV2Class {
+        input<T>({
+            ok,
+            ...options
+        }: { ok: Partial<DialogV2Button> } & DeepPartial<
+            DialogV2Configuration & DialogV2WaitOptions
+        >): Promise<T | null>
+    }
+
     type Character = Actor & {}
     class Hooks extends HooksType {
         static on(...args: HookParamsSetup): number
@@ -139,7 +152,7 @@ declare global {
             >
         ): number
         static on(...args: HookParamsRender<Dialog, 'Dialog'>): number
-        static on(...args: HookParamsRender<DialogV2, 'DialogV2'>): number
+        static on(...args: HookParamsRender<DialogV2Class, 'DialogV2'>): number
         static on(
             ...args: HookParamsRender<
                 ActorDirectory<Actor<null>>,

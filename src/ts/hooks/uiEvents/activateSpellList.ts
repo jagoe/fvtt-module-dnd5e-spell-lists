@@ -1,4 +1,8 @@
-import { activateSpellList } from '../../services/spellLists.ts'
+import {
+    activateSpellList,
+    getSpellLists,
+    saveSpellLists,
+} from '../../services/spellLists.ts'
 import { Listener } from '../index.ts'
 
 export const ActivateSpellList: Listener = {
@@ -19,7 +23,9 @@ export const ActivateSpellList: Listener = {
                 return
             }
 
-            await activateSpellList(actorId, spellListId)
+            const spellLists = await getSpellLists(actorId)
+            await activateSpellList(spellListId, spellLists)
+            await saveSpellLists(actorId, spellLists)
         })
     },
 }

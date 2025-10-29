@@ -22,7 +22,20 @@ export const AddSpellList: Listener = {
             }
 
             const spellList = createEmptySpellList()
-            spellList.name = 'New Spell List' // TODO: User input
+
+            const data = await (
+                foundry.applications.api
+                    .DialogV2 as unknown as DialogV2WithInput
+            ).input<{ name: string }>({
+                window: { title: 'Spell List Name' },
+                content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
+                ok: {
+                    label: 'Create',
+                    icon: 'fa-solid fa-floppy-disk',
+                },
+            })
+
+            spellList.name = data?.name ?? 'New Spell List'
 
             await saveSpellList(actorId, spellList)
         })
