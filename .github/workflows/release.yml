@@ -50,10 +50,11 @@ jobs:
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           artifacts: "./dist/module.json, ./dist/fvtt-module-dnd5e-spell-lists.zip"
-          body: "${{ github.event.release.body }}"
-          draft: true
+          body: ${{ github.event.release.body }}
+          draft: ${{ github.event.release.unpublished }}
           generateReleaseNotes: true
           name: ${{ github.event.release.name }}
+          prerelease: ${{ github.event.release.prerelease }}
           tag: ${{ github.event.release.tag_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
