@@ -1,6 +1,3 @@
-<div align="center">
-  <img src="https://i.imgur.com/gOZy3Jf.png" width="200" height="200"/>
-</div>
 <h1 align="center">FoundryVTT Module &mdash; Spell Lists for D&D 5e</h1>
 
 <p align="center">
