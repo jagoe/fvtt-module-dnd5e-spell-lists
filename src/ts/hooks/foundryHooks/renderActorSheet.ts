@@ -2,9 +2,8 @@ import { ApplicationRenderOptions } from '@client/applications/_module.mjs'
 import { Listener } from '../index.ts'
 import { createOrUpdateSpellListTabs } from '../../ui/spellListTabs.ts'
 import {
-    DEFAULT_SPELL_LIST_ID,
     getSpellLists,
-    saveSpellLists,
+    initializeDefaultSpellList,
 } from '../../services/spellLists.ts'
 
 export const RenderActorSheet: Listener = {
@@ -22,17 +21,23 @@ export const RenderActorSheet: Listener = {
                     return
                 }
 
+                const actor = game.actors.get(actorId) as Character
+                if (!actor) {
+                    return
+                }
+
+                const canPrepareSpells = Object.values(actor.system.scale).some(
+                    (c) => c['max-prepared'],
+                )
+
+                if (!canPrepareSpells) {
+                    // Actor cannot prepare spells, no spell lists needed
+                    return
+                }
+
                 let spellLists = await getSpellLists(_data.actor?.id || '')
                 if (!spellLists || spellLists.length === 0) {
-                    spellLists = [
-                        {
-                            name: 'Default', // TODO: i18n
-                            id: DEFAULT_SPELL_LIST_ID,
-                            isActive: true,
-                        },
-                    ]
-
-                    await saveSpellLists(actorId, spellLists)
+                    await initializeDefaultSpellList(actorId)
                 }
 
                 await createOrUpdateSpellListTabs(html, actorId, spellLists)

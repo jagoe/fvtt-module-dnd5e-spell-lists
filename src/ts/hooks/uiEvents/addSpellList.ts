@@ -35,7 +35,7 @@ export const AddSpellList: Listener = {
                 },
             })
 
-            spellList.name = data?.name ?? 'New Spell List'
+            spellList.name = data?.name || 'New Spell List'
 
             await saveSpellList(actorId, spellList)
         })

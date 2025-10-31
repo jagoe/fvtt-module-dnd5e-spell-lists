@@ -27,7 +27,17 @@
                 }
             }
         ],
-        "requires": []
+        "requires": [],
+        "optional": [
+            {
+                "id": "lib-wrapper",
+                "type": "module",
+                "compatibility": {
+                    "minimum": "1.0.0.0",
+                    "verified": "1.13.4.0"
+                }
+            }
+        ]
     },
     "languages": [
         {

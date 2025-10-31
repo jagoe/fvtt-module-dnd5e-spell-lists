@@ -1,15 +1,18 @@
-import { MODULE_ID } from '../constants.ts'
-import { SpellList } from '../models/spellList.ts'
+import { MODULE_ID, SpellPreparationMode } from '../constants.ts'
+import { SpellList, SpellListEntry } from '../models/spellList.ts'
 
 export const DEFAULT_SPELL_LIST_ID = 'default'
 
 const SPELL_LISTS_FLAG = 'spellLists'
+
+// TODO: Separate data access layer and business logic
 
 export function createEmptySpellList(): SpellList {
     return {
         name: '',
         id: '',
         isActive: false,
+        spells: [],
     }
 }
 
@@ -30,8 +33,7 @@ export async function saveSpellList(
         spellLists.push(spellList)
     }
 
-    await activateSpellList(spellList.id, spellLists)
-    await saveSpellLists(actorId, spellLists)
+    await activateSpellList(actorId, spellList.id, spellLists)
 }
 
 export async function saveSpellLists(
@@ -105,17 +107,210 @@ export async function deleteSpellList(
 
     const updatedLists = spellLists.filter((list) => list.id !== listId)
 
-    await activateSpellList(DEFAULT_SPELL_LIST_ID, updatedLists)
-    await saveSpellLists(actorId, updatedLists)
+    await activateSpellList(actorId, DEFAULT_SPELL_LIST_ID, updatedLists)
 }
 
 export async function activateSpellList(
+    actorId: string,
     listId: string,
     spellLists: SpellList[],
 ): Promise<void> {
     spellLists.forEach((list) => {
         list.isActive = list.id === listId
     })
+
+    await saveSpellLists(actorId, spellLists)
+
+    const activeSpellList = await getActiveSpellList(actorId)
+    if (!activeSpellList) {
+        return
+    }
+
+    // TODO: Separate foundry access logic into service (e.g. interaction with Actor or Spell entities)
+    const actor = game.actors?.get(actorId)
+    if (!actor) {
+        return
+    }
+
+    const currentlyPreparedSpells = actor.items
+        .filter((item) => {
+            if (item.type !== 'spell') {
+                return false
+            }
+
+            const spell = item as SpellItem
+            return (
+                spell.system.level > 0 &&
+                spell.system.prepared === SpellPreparationMode.PREPARED
+            )
+        })
+        .map((item) => item.id)
+
+    const spellsToPrepare = activeSpellList.spells.filter(
+        (spell) => !currentlyPreparedSpells.includes(spell.id),
+    )
+
+    const spellsToUnprepare = currentlyPreparedSpells.filter(
+        (spellId) =>
+            !activeSpellList.spells.some((spell) => spell.id === spellId),
+    )
+
+    const updates = [
+        ...spellsToPrepare.map((spell) => ({
+            _id: spell.id,
+            'system.prepared': SpellPreparationMode.PREPARED,
+        })),
+        ...spellsToUnprepare.map((spellId) => ({
+            _id: spellId,
+            'system.prepared': SpellPreparationMode.NOT_PREPARED,
+        })),
+    ]
+
+    await actor.updateEmbeddedDocuments('Item', updates)
+
+    const actorSheet = actor.sheet?.element as unknown as HTMLElement
+    const filter = actorSheet.querySelector(
+        'item-list-controls[for=spells]',
+    ) as FilterListControls
+    filter.state.properties = new Set(
+        activeSpellList.id === DEFAULT_SPELL_LIST_ID ? [] : ['prepared'],
+    )
+    filter._applyFilters()
+}
+
+export async function addToSpellList(
+    actorId: string,
+    spells: SpellListEntry[],
+): Promise<void> {
+    const spellLists = await getSpellLists(actorId)
+    const activeList = await getActiveSpellList(actorId)
+    if (!activeList) {
+        throw new Error(
+            `No active spell list found for actor ${actorId}`, // TODO: i18n
+        )
+    }
+
+    activeList.spells = [
+        ...activeList.spells,
+        ...spells.filter(
+            (spell) => !activeList.spells.some((s) => s.id === spell.id),
+        ),
+    ]
+
+    await saveSpellLists(actorId, spellLists)
+}
+
+export async function removeFromSpellList(
+    actorId: string,
+    spellId: string,
+): Promise<void> {
+    const spellLists = await getSpellLists(actorId)
+    const activeList = await getActiveSpellList(actorId)
+    if (!activeList) {
+        throw new Error(
+            `No active spell list found for actor ${actorId}`, // TODO: i18n
+        )
+    }
+
+    const index = activeList.spells.findIndex((s) => s.id === spellId)
+    if (index !== -1) {
+        activeList.spells.splice(index, 1)
+        await saveSpellLists(actorId, spellLists)
+    }
+}
+
+export async function removeFromAllSpellLists(
+    actorId: string,
+    spellId: string,
+): Promise<void> {
+    const spellLists = await getSpellLists(actorId)
+    let modified = false
+
+    spellLists.forEach((list) => {
+        const index = list.spells.findIndex((s) => s.id === spellId)
+        if (index !== -1) {
+            list.spells.splice(index, 1)
+            modified = true
+        }
+    })
+
+    if (modified) {
+        await saveSpellLists(actorId, spellLists)
+    }
+}
+
+export async function initializeDefaultSpellList(
+    actorId: string,
+): Promise<void> {
+    // TODO: Extract into Foundry data access layer & deduplicate
+    const currentlyPreparedSpells =
+        game.actors
+            ?.get(actorId)
+            ?.items.filter((item) => {
+                if (item.type !== 'spell') {
+                    return false
+                }
+
+                const spell = item as SpellItem
+                return (
+                    spell.system.level > 0 &&
+                    spell.system.prepared === SpellPreparationMode.PREPARED
+                )
+            })
+            .map((item) => ({
+                id: item.id,
+                sourceClass: (item as SpellItem).system.sourceClass,
+            })) ?? []
+
+    await resetSpellLists(actorId)
+    const activeSpellList = await getActiveSpellList(actorId)
+    if (activeSpellList) {
+        return
+    }
+
+    await addToSpellList(actorId, currentlyPreparedSpells)
+}
+
+export async function getActiveSpellList(
+    actorId: string,
+): Promise<SpellList | undefined> {
+    const spellLists = await getSpellLists(actorId)
+
+    return spellLists.find((list) => list.isActive)
+}
+
+export async function resetSpellLists(actorId: string): Promise<void> {
+    const spellLists: SpellList[] = []
+    const defaultList: SpellList = {
+        name: 'Default', // TODO: i18n
+        id: DEFAULT_SPELL_LIST_ID,
+        isActive: true,
+        spells: [],
+    }
+    spellLists.push(defaultList)
+
+    await saveSpellLists(actorId, spellLists)
+
+    // TODO: Extract into Foundry data access layer
+    const actor = game.actors?.get(actorId)
+    if (!actor) {
+        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+    }
+
+    const spells = actor.items
+        .filter(
+            (item) =>
+                item.type === 'spell' &&
+                (item as SpellItem).system.level > 0 &&
+                (item as SpellItem).system.prepared ===
+                    SpellPreparationMode.PREPARED,
+        )
+        .map((item) => ({
+            _id: item.id,
+            'system.prepared': SpellPreparationMode.NOT_PREPARED,
+        }))
+
+    await actor.updateEmbeddedDocuments('Item', spells)
 }
 
 function toSnakeCase(str: string): string {

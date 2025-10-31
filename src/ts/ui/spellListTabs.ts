@@ -37,12 +37,15 @@ export async function createOrUpdateSpellListTabs(
         header.after(spellListsElement)
     }
 
-    const activeList = spellListsElement.querySelector('.spell-list.active')
-    activeList?.scrollIntoView({
-        behavior: 'instant',
-        block: 'center',
-        inline: 'center',
-    })
+    const activeList = spellListsElement.querySelector(
+        '.spell-list.active',
+    ) as HTMLElement
+    if (activeList) {
+        spellListsElement.scroll({
+            left: activeList.offsetLeft - spellListsElement.offsetLeft,
+            behavior: 'instant',
+        })
+    }
 
     const contextMenuItems: ContextMenuEntry[] = [
         {

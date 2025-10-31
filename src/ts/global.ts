@@ -46,6 +46,7 @@ import type {
     HookParamsPreCreateItem,
     HookParamsPreUpdateToken,
     HookParamsReady,
+    HookParamsRender,
     HookParamsRenderChatMessageHTML,
     HookParamsSetup,
     HookParamsTargetToken,
@@ -54,12 +55,11 @@ import type {
     HooksParamsPreUpdateCombat,
 } from '@client/helpers/hooks.d.mts'
 import type { FoundryUI } from '@client/ui.d.mts'
-import { Application } from '@client/appv1/api/_module.mjs'
 import { ApplicationV2 } from '@client/applications/api/_module.mjs'
-import {
-    ApplicationRenderContext,
-    ApplicationRenderOptions,
-} from '@client/applications/_module.mjs'
+import { ApplicationRenderContext } from '@client/applications/_module.mjs'
+import type ItemClass from '@client/documents/item.d.mts'
+import { SpellPreparationMode } from './constants.ts'
+import { DatabaseUpdateOperation } from '@common/abstract/_module.mjs'
 
 type ConfiguredConfig = Config<
     AmbientLightDocument<Scene | null>,
@@ -90,15 +90,17 @@ declare global {
     const CONFIG: ConfiguredConfig
     const canvas: Canvas
 
-    type HookParamsRender<
-        T extends Application | ApplicationV2,
+    type HookParamsPreUpdate<
+        T extends foundry.abstract.Document,
         N extends string,
-        C extends ApplicationRenderContext = ApplicationRenderContext,
     > = HookParameters<
-        `render${N}`,
-        T extends Application
-            ? [T, JQuery, Awaited<ReturnType<T['getData']>>]
-            : [T, HTMLElement, C, ApplicationRenderOptions]
+        `preUpdate${N}`,
+        [
+            T,
+            Record<string, unknown>,
+            DatabaseUpdateOperation<T['parent']>,
+            string,
+        ]
     >
 
     type CharacterActorSheet = ApplicationV2 & {
@@ -118,7 +120,37 @@ declare global {
         >): Promise<T | null>
     }
 
-    type Character = Actor & {}
+    type Character = InstanceType<typeof Actor> & {
+        type: 'character'
+        system: {
+            scale: Record<string, { 'max-prepared'?: { value: number } }>
+        }
+    }
+
+    type SpellItem = InstanceType<typeof ItemClass> & {
+        system: {
+            level: number
+            prepared: SpellPreparationMode
+            sourceClass: string
+        }
+        type: 'spell'
+    }
+
+    type ClassItem = InstanceType<typeof ItemClass> & {
+        system: {
+            identifier: string
+        }
+        type: 'class'
+    }
+
+    type FilterListControls = HTMLElement & {
+        state: {
+            name: string
+            properties: Set<string>
+        }
+        _applyFilters(): void
+    }
+
     class Hooks extends HooksType {
         static on(...args: HookParamsSetup): number
         static on(...args: HookParamsInit): number
@@ -199,17 +231,20 @@ declare global {
             ...args: HookParamsRender<RegionLegend, 'RegionLegend'>
         ): number
         static on(...args: HookParamsTargetToken): number
+        static on(...args: HookParamsPreUpdate<Item, 'Item'>): number
         static on(...args: HookParamsUpdate<Combat, 'Combat'>): number
         static on(...args: HookParamsUpdate<Scene, 'Scene'>): number
+        static on(...args: HookParamsUpdate<Item, 'Item'>): number
         static on(...args: HookParamsUpdateWorldTime): number
         static on(...args: HookParamsGetProseMirrorMenuDropDowns): number
-        static on(...args: HookParameters<string, unknown[]>): number
         static on(
             ...args: HookParamsRender<
                 CharacterActorSheet,
                 'CharacterActorSheet'
             >
         ): number
+
+        static on(...args: HookParameters<string, unknown[]>): number
     }
 
     namespace globalThis {

@@ -21,7 +21,7 @@ function error(...args: unknown[]): void {
 function print(level: logLevel = 'info', ...args: unknown[]): void {
     const fn = level === 'info' ? console.log : console[level]
 
-    fn(`Foundry VTT | Module ${MODULE_NAME} |`, ...args)
+    fn(`Foundry VTT | Module | ${MODULE_NAME} |`, ...args)
 }
 
 export const log = {

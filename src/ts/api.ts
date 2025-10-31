@@ -5,7 +5,7 @@ interface ThisModule extends Module {
 }
 
 interface ThisApi {
-    noop(): void
+    reset(actorId: string): Promise<void>
 }
 
 export { type ThisModule, type ThisApi }
