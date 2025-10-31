@@ -5,7 +5,8 @@ interface ThisModule extends Module {
 }
 
 interface ThisApi {
-    reset(actorId: string): Promise<void>
+    resetAll(): Promise<void>
+    resetCharacter(actorId: string): Promise<void>
 }
 
 export { type ThisModule, type ThisApi }

@@ -108,7 +108,7 @@ declare global {
     }
 
     type CharacterActorSheetData = ApplicationRenderContext & {
-        actor?: Character | null
+        actor?: Actor | null
     }
 
     class DialogV2WithInput extends DialogV2Class {
@@ -118,13 +118,6 @@ declare global {
         }: { ok: Partial<DialogV2Button> } & DeepPartial<
             DialogV2Configuration & DialogV2WaitOptions
         >): Promise<T | null>
-    }
-
-    type Character = InstanceType<typeof Actor> & {
-        type: 'character'
-        system: {
-            scale: Record<string, { 'max-prepared'?: { value: number } }>
-        }
     }
 
     type SpellItem = InstanceType<typeof ItemClass> & {
@@ -139,6 +132,13 @@ declare global {
     type ClassItem = InstanceType<typeof ItemClass> & {
         system: {
             identifier: string
+            spellcasting: {
+                preparation?: {
+                    formula: string
+                    value: number
+                    max: number
+                }
+            }
         }
         type: 'class'
     }

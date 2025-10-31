@@ -239,6 +239,12 @@ export async function removeFromAllSpellLists(
     }
 }
 
+export async function canPrepareSpells(actorId: string): Promise<boolean> {
+    const maxPreparedSpells = await getMaxPreparedSpells(actorId)
+
+    return !!Object.keys(maxPreparedSpells).length
+}
+
 export async function initializeDefaultSpellList(
     actorId: string,
 ): Promise<void> {
@@ -279,7 +285,24 @@ export async function getActiveSpellList(
     return spellLists.find((list) => list.isActive)
 }
 
+export async function resetSpellListsForAllActors(): Promise<void> {
+    const characters = game.actors?.filter(
+        (actor) => actor.type === 'character',
+    )
+
+    await Promise.all(
+        characters.map((character) => resetSpellLists(character._id!)),
+    )
+}
+
 export async function resetSpellLists(actorId: string): Promise<void> {
+    const actorCanPrepareSpells = await canPrepareSpells(actorId)
+
+    if (!actorCanPrepareSpells) {
+        await clearSpellLists(actorId)
+        return
+    }
+
     const spellLists: SpellList[] = []
     const defaultList: SpellList = {
         name: 'Default', // TODO: i18n
@@ -311,6 +334,42 @@ export async function resetSpellLists(actorId: string): Promise<void> {
         }))
 
     await actor.updateEmbeddedDocuments('Item', spells)
+}
+
+// TODO: Extract into Foundry access layer
+export async function getMaxPreparedSpells(
+    actorId: string,
+): Promise<Record<string, number>> {
+    const actor = game.actors?.get(actorId)
+    if (!actor) {
+        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+    }
+
+    const classes = actor.items.filter(
+        (item) => item.type === 'class',
+    ) as ClassItem[]
+
+    return classes.reduce(
+        (dict, current) => ({
+            ...dict,
+            ...(current.system.spellcasting.preparation?.max
+                ? {
+                      [current.system.identifier]:
+                          current.system.spellcasting.preparation?.max,
+                  }
+                : {}),
+        }),
+        {} as Record<string, number>,
+    )
+}
+
+async function clearSpellLists(actorId: string): Promise<void> {
+    const actor = game.actors?.get(actorId)
+    if (!actor) {
+        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+    }
+
+    await actor.setFlag(MODULE_ID, `-=${SPELL_LISTS_FLAG}`, null)
 }
 
 function toSnakeCase(str: string): string {

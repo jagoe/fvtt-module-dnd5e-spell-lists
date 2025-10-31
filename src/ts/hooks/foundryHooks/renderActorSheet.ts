@@ -2,6 +2,7 @@ import { ApplicationRenderOptions } from '@client/applications/_module.mjs'
 import { Listener } from '../index.ts'
 import { createOrUpdateSpellListTabs } from '../../ui/spellListTabs.ts'
 import {
+    canPrepareSpells,
     getSpellLists,
     initializeDefaultSpellList,
 } from '../../services/spellLists.ts'
@@ -21,21 +22,13 @@ export const RenderActorSheet: Listener = {
                     return
                 }
 
-                const actor = game.actors.get(actorId) as Character
-                if (!actor) {
+                const actorCanPrepareSpells = await canPrepareSpells(actorId)
+
+                if (!actorCanPrepareSpells) {
                     return
                 }
 
-                const canPrepareSpells = Object.values(actor.system.scale).some(
-                    (c) => c['max-prepared'],
-                )
-
-                if (!canPrepareSpells) {
-                    // Actor cannot prepare spells, no spell lists needed
-                    return
-                }
-
-                let spellLists = await getSpellLists(_data.actor?.id || '')
+                let spellLists = await getSpellLists(actorId)
                 if (!spellLists || spellLists.length === 0) {
                     await initializeDefaultSpellList(actorId)
                 }

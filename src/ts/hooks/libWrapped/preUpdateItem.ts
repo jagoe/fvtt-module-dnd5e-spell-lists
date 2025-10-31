@@ -1,6 +1,9 @@
 import type { DatabaseUpdateOperation } from '@common/abstract/_module.mjs'
 import { SpellPreparationMode } from '../../constants.ts'
-import { getActiveSpellList } from '../../services/spellLists.ts'
+import {
+    getActiveSpellList,
+    getMaxPreparedSpells,
+} from '../../services/spellLists.ts'
 import { log } from '../../util/log.ts'
 
 export async function preUpdateItem(
@@ -58,17 +61,7 @@ export async function preUpdateItem(
         return
     }
 
-    const maxPreparedSpells = Object.entries(
-        (actor as Character).system.scale,
-    ).reduce(
-        (dict, [key, value]) => {
-            if (value['max-prepared'] !== undefined) {
-                dict[key] = (value['max-prepared'] as { value: number }).value
-            }
-            return dict
-        },
-        {} as Record<string, number>,
-    )
+    const maxPreparedSpells = await getMaxPreparedSpells(actorId)
 
     const totalPreparedSpells = Object.values(maxPreparedSpells).reduce(
         (sum, val) => sum + val,
