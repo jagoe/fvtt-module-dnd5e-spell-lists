@@ -170,14 +170,17 @@ export async function activateSpellList(
 
     await actor.updateEmbeddedDocuments('Item', updates)
 
-    const actorSheet = actor.sheet?.element as unknown as HTMLElement
-    const filter = actorSheet.querySelector(
-        'item-list-controls[for=spells]',
-    ) as FilterListControls
-    filter.state.properties = new Set(
-        activeSpellList.id === DEFAULT_SPELL_LIST_ID ? [] : ['prepared'],
-    )
-    filter._applyFilters()
+    if (spellsToPrepare.length > 0) {
+        // TODO: Extract to Foundry layer
+        const actorSheet = actor.sheet?.element as unknown as HTMLElement
+        const filter = actorSheet.querySelector(
+            'item-list-controls[for=spells]',
+        ) as FilterListControls
+        filter.state.properties = new Set(
+            activeSpellList.id === DEFAULT_SPELL_LIST_ID ? [] : ['prepared'],
+        )
+        filter._applyFilters()
+    }
 }
 
 export async function addToSpellList(

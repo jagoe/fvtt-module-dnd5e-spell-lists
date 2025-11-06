@@ -19,16 +19,6 @@ export const UpdateItem: Listener = {
 
                 const spell = item as SpellItem
 
-                if (spell.system.level < 1) {
-                    // Ignore cantrips
-                    return
-                }
-
-                if (changes.system?.prepared === undefined) {
-                    // Ignore changes that don't affect the prepared state
-                    return
-                }
-
                 const actorId = spell.parent?.id
                 if (!actorId) {
                     log.warn(
@@ -37,32 +27,59 @@ export const UpdateItem: Listener = {
                     return
                 }
 
+                const hasSpellTypeChange =
+                    changes.system?.method !== undefined ||
+                    changes.system?.level !== undefined
+
+                const changesToIrrelevantSpell =
+                    changes.system?.method !== 'spell' ||
+                    changes.system?.level === 1
+
+                if (hasSpellTypeChange && changesToIrrelevantSpell) {
+                    // The spell no longer counts as a prepared spell
+                    await removeFromAllSpellLists(actorId, spell.id)
+
+                    return
+                }
+
+                if (spell.system.level < 1) {
+                    // Ignore cantrips
+                    return
+                }
+
                 if (
-                    changes.system.prepared ===
-                    SpellPreparationMode.NOT_PREPARED
+                    changes.system?.prepared === undefined &&
+                    !hasSpellTypeChange
                 ) {
+                    // Ignore changes that don't affect the prepared state, but only if the spell type doesn't change
+                    return
+                }
+
+                const preparedState =
+                    hasSpellTypeChange && changes.system?.prepared === undefined
+                        ? spell.system.prepared
+                        : changes.system?.prepared
+
+                if (preparedState === SpellPreparationMode.NOT_PREPARED) {
                     await removeFromSpellList(actorId, spell.id)
                     return
                 }
 
-                if (changes.system.prepared === SpellPreparationMode.PREPARED) {
+                if (preparedState === SpellPreparationMode.PREPARED) {
                     await addToSpellList(actorId, [
                         { id: spell.id, sourceClass: spell.system.sourceClass },
                     ])
                     return
                 }
 
-                if (
-                    changes.system.prepared ===
-                    SpellPreparationMode.ALWAYS_PREPARED
-                ) {
+                if (preparedState === SpellPreparationMode.ALWAYS_PREPARED) {
                     await removeFromAllSpellLists(actorId, spell.id)
                     return
                 }
 
                 // Unknown prepared state
                 log.warn(
-                    `Unknown prepared state for spell ${spell.name}: ${changes.system.prepared}`,
+                    `Unknown prepared state for spell ${spell.name}: ${preparedState}`,
                 )
             },
         )

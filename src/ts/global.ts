@@ -122,6 +122,7 @@ declare global {
 
     type SpellItem = InstanceType<typeof ItemClass> & {
         system: {
+            method: 'spell' | 'pact' | 'ritual' | 'innate' | 'atwill' | ''
             level: number
             prepared: SpellPreparationMode
             sourceClass: string

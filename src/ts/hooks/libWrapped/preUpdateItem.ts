@@ -37,15 +37,6 @@ export async function preUpdateItem(
         return
     }
 
-    const actorId = this.parent?.id
-    if (!actorId) {
-        log.warn(
-            `Spell ${this.name} has no parent actor, cannot update spell list`,
-        )
-        next()
-        return
-    }
-
     if (changes.system.prepared !== SpellPreparationMode.PREPARED) {
         // Only handle preparing spells here
         next()
@@ -53,7 +44,18 @@ export async function preUpdateItem(
     }
 
     if (changes.ignoreSpellLimitCheck === true) {
+        // Ignore if the spell change should be ignored by this check
+
         delete changes.ignoreSpellLimitCheck
+        return
+    }
+
+    const actorId = this.parent?.id
+    if (!actorId) {
+        log.warn(
+            `Spell ${this.name} has no parent actor, cannot update spell list`,
+        )
+        next()
         return
     }
 
@@ -68,7 +70,7 @@ export async function preUpdateItem(
 
     const maxPreparedSpells = await getMaxPreparedSpells(actorId)
 
-    const totalPreparedSpells = Object.values(maxPreparedSpells).reduce(
+    const totalMaxPreparedSpells = Object.values(maxPreparedSpells).reduce(
         (sum, val) => sum + val,
         0,
     )
@@ -79,6 +81,12 @@ export async function preUpdateItem(
             `No active spell list for actor ${actor.name}, cannot enforce prepared spell limits`,
         )
         next()
+        return
+    }
+
+    if (activeSpellList.spells.some((spell) => spell.id === this.id)) {
+        // Ignore, if the spell is already on the current list
+
         return
     }
 
@@ -103,7 +111,7 @@ export async function preUpdateItem(
         }
     }
 
-    if (activeSpellList.spells.length < totalPreparedSpells) {
+    if (activeSpellList.spells.length < totalMaxPreparedSpells) {
         // Within limits
         next()
         return
