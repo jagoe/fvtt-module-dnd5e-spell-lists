@@ -159,10 +159,12 @@ export async function activateSpellList(
         ...spellsToPrepare.map((spell) => ({
             _id: spell.id,
             'system.prepared': SpellPreparationMode.PREPARED,
+            ignoreSpellLimitCheck: true, // TODO: Add constant?
         })),
         ...spellsToUnprepare.map((spellId) => ({
             _id: spellId,
             'system.prepared': SpellPreparationMode.NOT_PREPARED,
+            ignoreSpellLimitCheck: true, // TODO: Add constant?
         })),
     ]
 

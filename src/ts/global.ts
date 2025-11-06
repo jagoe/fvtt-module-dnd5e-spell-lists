@@ -127,6 +127,9 @@ declare global {
             sourceClass: string
         }
         type: 'spell'
+
+        // Hacky solution to prevent a preUpdateItem hook under certain conditions
+        ignoreSpellLimitCheck: boolean
     }
 
     type ClassItem = InstanceType<typeof ItemClass> & {

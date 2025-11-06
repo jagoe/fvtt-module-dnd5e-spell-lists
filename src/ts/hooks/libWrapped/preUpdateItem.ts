@@ -52,6 +52,11 @@ export async function preUpdateItem(
         return
     }
 
+    if (changes.ignoreSpellLimitCheck === true) {
+        delete changes.ignoreSpellLimitCheck
+        return
+    }
+
     const actor = game.actors.get(actorId)
     if (!actor) {
         log.warn(
