@@ -37,17 +37,19 @@ const world = (
         type: 'select',
         name: 'value',
         message: 'Select the world you want to start into.',
-        choices: fs
-            .readdirSync(path.resolve(dataPath, 'Data', 'worlds'))
-            .filter((dir) =>
-                fs
-                    .statSync(path.resolve(dataPath, 'Data', 'worlds', dir))
-                    .isDirectory(),
-            )
-            .map((dir) => ({
-                title: dir,
-                value: dir,
-            })),
+        choices: [{ title: '—', value: '' }].concat(
+            fs
+                .readdirSync(path.resolve(dataPath, 'Data', 'worlds'))
+                .filter((dir) =>
+                    fs
+                        .statSync(path.resolve(dataPath, 'Data', 'worlds', dir))
+                        .isDirectory(),
+                )
+                .map((dir) => ({
+                    title: dir,
+                    value: dir,
+                })),
+        ),
     })
 ).value as string
 
