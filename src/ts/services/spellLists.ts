@@ -20,8 +20,7 @@ export async function saveSpellList(
     actorId: string,
     spellList: SpellList,
 ): Promise<void> {
-    spellList.id = toSnakeCase(spellList.name)
-    await makeUnique(actorId, spellList)
+    spellList.id = `${toSnakeCase(spellList.name)}_${foundry.utils.randomID(8)}`
 
     const spellLists = await getSpellLists(actorId)
     const existingIndex = spellLists.findIndex(
@@ -382,25 +381,4 @@ function toSnakeCase(str: string): string {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '')
-}
-
-async function makeUnique(
-    actorId: string,
-    spellList: SpellList,
-): Promise<void> {
-    const spellLists = await getSpellLists(actorId)
-    const baseId = spellList.id
-    const highestCount =
-        spellLists.reduce((acc, list) => {
-            const regex = new RegExp(`^${baseId}_(\\d+)$`)
-            const match = list.id.match(regex)
-            if (!match) {
-                return acc
-            }
-
-            const count = parseInt(match[1], 10)
-            return Math.max(acc, count)
-        }, 0) || 1
-
-    spellList.id = `${baseId}_${highestCount + 1}`
 }
