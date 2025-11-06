@@ -5,7 +5,11 @@ import {
     ContextMenuEntry,
     ContextMenuOptions,
 } from '@client/applications/ux/context-menu.mjs'
-import { deleteSpellList, updateSpellList } from '../services/spellLists.ts'
+import {
+    copySpellList,
+    deleteSpellList,
+    updateSpellList,
+} from '../services/spellLists.ts'
 
 export async function createOrUpdateSpellListTabs(
     html: HTMLElement,
@@ -75,6 +79,18 @@ export async function createOrUpdateSpellListTabs(
                 }
 
                 updateSpellList(actorId, spellListId, { name: spellListName })
+            },
+        },
+        {
+            name: 'Copy Spell List', // TODO: i18n
+            icon: '<i class="fas fa-copy"></i>',
+            callback: async (li: HTMLElement) => {
+                const spellListId = li.dataset.listId
+                if (!spellListId) {
+                    return
+                }
+
+                copySpellList(actorId, spellListId)
             },
         },
         {

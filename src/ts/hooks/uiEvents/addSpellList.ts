@@ -27,6 +27,7 @@ export const AddSpellList: Listener = {
                 foundry.applications.api
                     .DialogV2 as unknown as DialogV2WithInput
             ).input<{ name: string }>({
+                // TODO: i18n
                 window: { title: 'Spell List Name' },
                 content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
                 ok: {

@@ -20,7 +20,7 @@ export async function saveSpellList(
     actorId: string,
     spellList: SpellList,
 ): Promise<void> {
-    spellList.id = `${toSnakeCase(spellList.name)}_${foundry.utils.randomID(8)}`
+    spellList.id = createId(spellList)
 
     const spellLists = await getSpellLists(actorId)
     const existingIndex = spellLists.findIndex(
@@ -66,18 +66,41 @@ export async function updateSpellList(
     updatedList: Partial<SpellList>,
 ): Promise<void> {
     const spellLists = await getSpellLists(actorId)
-    const index = spellLists.findIndex((list) => list.id === spellListId)
-    if (index === -1) {
-        throw new Error(
-            `Spell list with ID ${updatedList.id} not found for actor ${actorId}`, // TODO: i18n
-        )
-    }
+    const spellList = await getSpellList(actorId, spellListId)
 
     Object.entries(updatedList).forEach(([key, value]) => {
-        ;(spellLists[index] as any)[key] = value
+        ;(spellList as any)[key] = value
     })
 
     await saveSpellLists(actorId, spellLists)
+}
+
+export async function getSpellList(
+    actorId: string,
+    spellListId: string,
+): Promise<SpellList> {
+    const spellLists = await getSpellLists(actorId)
+    const index = spellLists.findIndex((list) => list.id === spellListId)
+    if (index === -1) {
+        throw new Error(
+            `Spell list with ID ${spellListId} not found for actor ${actorId}`, // TODO: i18n
+        )
+    }
+
+    return spellLists[index]
+}
+
+export async function copySpellList(
+    actorId: string,
+    spellListId: string,
+): Promise<void> {
+    const spellList = await getSpellList(actorId, spellListId)
+    const copy = foundry.utils.deepClone(spellList)
+
+    copy.id = createId(copy)
+    copy.name = `${copy.name} (Copy)` // TODO: i18n
+
+    await saveSpellList(actorId, copy)
 }
 
 export async function deleteSpellList(
@@ -89,7 +112,7 @@ export async function deleteSpellList(
     }
 
     const spellLists = await getSpellLists(actorId)
-    const listToDelete = spellLists.find((list) => list.id === listId)
+    const listToDelete = await getSpellList(actorId, listId)
     if (!listToDelete) {
         throw new Error(
             `Spell list with ID ${listId} not found for actor ${actorId}`, // TODO: i18n
@@ -374,6 +397,10 @@ async function clearSpellLists(actorId: string): Promise<void> {
     }
 
     await actor.setFlag(MODULE_ID, `-=${SPELL_LISTS_FLAG}`, null)
+}
+
+function createId(spellList: SpellList) {
+    return `${toSnakeCase(spellList.name)}_${foundry.utils.randomID(8)}`
 }
 
 function toSnakeCase(str: string): string {
