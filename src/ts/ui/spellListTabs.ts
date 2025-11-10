@@ -78,6 +78,22 @@ function scrollToActiveList(spellListsContainer: HTMLElement) {
     }
 }
 
+// TODO: Extract
+export async function promptSpellListName(): Promise<string | null> {
+    const data = await (
+        foundry.applications.api.DialogV2 as unknown as DialogV2WithInput
+    ).input<{ name: string }>({
+        window: { title: 'Spell List Name' },
+        content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
+        ok: {
+            label: 'Update',
+            icon: 'fa-solid fa-floppy-disk',
+        },
+    })
+
+    return data?.name || null
+}
+
 function addContextMenu(actorId: string, spellsTab: HTMLElement) {
     const contextMenuItems: ContextMenuEntry[] = [
         {
@@ -89,19 +105,7 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
                     return
                 }
 
-                const data = await (
-                    foundry.applications.api
-                        .DialogV2 as unknown as DialogV2WithInput
-                ).input<{ name: string }>({
-                    window: { title: 'Spell List Name' },
-                    content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
-                    ok: {
-                        label: 'Update',
-                        icon: 'fa-solid fa-floppy-disk',
-                    },
-                })
-
-                const spellListName = data?.name
+                const spellListName = await promptSpellListName()
                 if (!spellListName) {
                     return
                 }
@@ -118,7 +122,9 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
                     return
                 }
 
-                copySpellList(actorId, spellListId)
+                const spellListName = await promptSpellListName()
+
+                copySpellList(actorId, spellListId, spellListName)
             },
         },
         {

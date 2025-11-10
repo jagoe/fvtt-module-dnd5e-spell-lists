@@ -2,6 +2,7 @@ import {
     createEmptySpellList,
     saveSpellList,
 } from '../../services/spellLists.ts'
+import { promptSpellListName } from '../../ui/spellListTabs.ts'
 import { Listener } from '../index.ts'
 
 export const AddSpellList: Listener = {
@@ -23,20 +24,7 @@ export const AddSpellList: Listener = {
 
             const spellList = createEmptySpellList()
 
-            const data = await (
-                foundry.applications.api
-                    .DialogV2 as unknown as DialogV2WithInput
-            ).input<{ name: string }>({
-                // TODO: i18n
-                window: { title: 'Spell List Name' },
-                content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
-                ok: {
-                    label: 'Create',
-                    icon: 'fa-solid fa-floppy-disk',
-                },
-            })
-
-            spellList.name = data?.name || 'New Spell List'
+            spellList.name = (await promptSpellListName()) || 'New Spell List'
 
             await saveSpellList(actorId, spellList)
         })

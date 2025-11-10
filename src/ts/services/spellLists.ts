@@ -20,7 +20,7 @@ export async function saveSpellList(
     actorId: string,
     spellList: SpellList,
 ): Promise<void> {
-    spellList.id = createId(spellList)
+    spellList.id = createId()
 
     const spellLists = await getSpellLists(actorId)
     const existingIndex = spellLists.findIndex(
@@ -116,12 +116,13 @@ export async function getSpellList(
 export async function copySpellList(
     actorId: string,
     spellListId: string,
+    newName: string | null,
 ): Promise<void> {
     const spellList = await getSpellList(actorId, spellListId)
     const copy = foundry.utils.deepClone(spellList)
 
-    copy.id = createId(copy)
-    copy.name = `${copy.name} (Copy)` // TODO: i18n
+    copy.id = createId()
+    copy.name = newName || `${spellList.name} (Copy)` // TODO: i18n
 
     await saveSpellList(actorId, copy)
 }
@@ -422,13 +423,6 @@ async function clearSpellLists(actorId: string): Promise<void> {
     await actor.setFlag(MODULE_ID, `-=${SPELL_LISTS_FLAG}`, null)
 }
 
-function createId(spellList: SpellList) {
-    return `${toSnakeCase(spellList.name)}_${foundry.utils.randomID(8)}`
-}
-
-function toSnakeCase(str: string): string {
-    return str
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_|_$/g, '')
+function createId() {
+    return foundry.utils.randomID(16)
 }
