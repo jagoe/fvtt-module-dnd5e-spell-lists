@@ -4,6 +4,7 @@
             <li
                 class="spell-list {{#if this.isActive}}active{{/if}}"
                 data-list-id="{{this.id}}"
+                draggable="true"
             >
                 <a class="list-name" data-action="activate-spell-list" data-spell-list-id="{{this.id}}">{{this.name}}</a>
             </li>

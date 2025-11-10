@@ -75,6 +75,29 @@ export async function updateSpellList(
     await saveSpellLists(actorId, spellLists)
 }
 
+export async function moveSpellList(
+    actorId: string,
+    sourceListId: string,
+    intent: 'before' | 'after',
+    targetListId: string,
+): Promise<void> {
+    const spellLists = await getSpellLists(actorId)
+    const source = spellLists.find((list) => list.id === sourceListId)
+    const target = spellLists.find((list) => list.id === targetListId)
+
+    if (!source || !target) {
+        return
+    }
+
+    const reordered = spellLists.filter((list) => list !== source)
+    const targetIndex =
+        reordered.indexOf(target) + (intent === 'before' ? 0 : 1)
+
+    reordered.splice(targetIndex, 0, source)
+
+    await saveSpellLists(actorId, reordered)
+}
+
 export async function getSpellList(
     actorId: string,
     spellListId: string,

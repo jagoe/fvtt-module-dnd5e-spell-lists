@@ -1,7 +1,10 @@
 import { MODULE_NAME } from '../constants.ts'
 
-type logLevel = 'trace' | 'info' | 'warn' | 'error'
+type logLevel = 'debug' | 'trace' | 'info' | 'warn' | 'error'
 
+function debug(...args: unknown[]): void {
+    print('debug', ...args)
+}
 function trace(...args: unknown[]): void {
     print('info', ...args)
 }
@@ -25,6 +28,7 @@ function print(level: logLevel = 'info', ...args: unknown[]): void {
 }
 
 export const log = {
+    debug,
     trace,
     info,
     warn,

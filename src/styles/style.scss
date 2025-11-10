@@ -1,43 +1,76 @@
-@layer modules {
-    :root {
-    }
+.spell-lists-container {
+    --spell-list-line-height: 1em;
+    --spell-list-padding: 5px;
 
-    .spell-lists-container {
-        display: grid;
+    display: grid;
 
-        ul.spell-lists {
-            margin: -10px 0;
-            padding: 10px 0;
-            list-style: none;
+    ul.spell-lists {
+        margin: -10px 0;
+        padding: 10px 0;
+        list-style: none;
 
-            display: flex;
-            text-transform: uppercase;
-            font-weight: bold;
-            overflow-x: scroll;
+        display: flex;
+        text-transform: uppercase;
+        font-weight: bold;
+        overflow-x: scroll;
 
-            .spell-list {
-                flex: 0 1 0;
-                padding: 0 5px;
-                margin: auto 0;
-                line-height: 1;
-                color: var(--color-text-secondary);
-                cursor: var(--cursor-pointer);
+        .spell-list {
+            position: relative;
+            flex: 0 1 0;
+            padding: 0 var(--spell-list-padding);
+            margin: auto 0;
+            line-height: var(--spell-list-line-height);
+            color: var(--color-text-secondary);
+            cursor: var(--cursor-pointer);
+            text-wrap: nowrap;
 
-                &:hover {
-                    text-shadow: 0 0 10px var(--color-shadow-primary);
+            &:hover {
+                text-shadow: 0 0 10px var(--color-shadow-primary);
+            }
+
+            &.active {
+                color: var(--color-text-primary);
+                text-shadow: none;
+            }
+
+            &.add-spell-list {
+                color: var(--color-text-primary);
+            }
+
+            .list-name {
+                text-wrap: nowrap;
+            }
+
+            &.dragging .list-name {
+                opacity: 0.5;
+            }
+
+            &.drop-target {
+                @mixin drop-insertion-marker {
+                    content: '';
+                    position: absolute;
+                    width: 1px;
+                    height: calc(var(--spell-list-line-height) * 1.5);
+                    border: 2px solid gray;
+                    top: calc(var(--spell-list-line-height) / -4);
                 }
 
-                &.active {
-                    color: var(--color-text-primary);
-                    text-shadow: none;
+                @function get_drop_insertion_marker_v_offset($position) {
+                    @return calc(var(--spell-list-padding) / -2);
                 }
 
-                &.add-spell-list {
-                    color: var(--color-text-primary);
+                &.drop-before {
+                    &::before {
+                        @include drop-insertion-marker();
+                        left: calc(var(--spell-list-padding) / -2 + 1px);
+                    }
                 }
 
-                .list-name {
-                    text-wrap: nowrap;
+                &.drop-after {
+                    &::after {
+                        @include drop-insertion-marker();
+                        right: calc(var(--spell-list-padding) / -2);
+                    }
                 }
             }
         }
