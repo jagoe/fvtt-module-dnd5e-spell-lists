@@ -17,19 +17,19 @@ export async function createOrUpdateSpellListTabs(
     actorId: string,
     lists: SpellList[],
 ): Promise<void> {
-    const { spellsTab, spellListsContainer } = await addSpellListTabs(
+    const { spellsTab, spellListsElement } = await addSpellListTabs(
         actorId,
         lists,
         html,
     )
 
-    if (!spellsTab || !spellListsContainer) {
+    if (!spellsTab || !spellListsElement) {
         return
     }
 
-    scrollToActiveList(spellListsContainer)
+    scrollToActiveList(spellListsElement)
     addContextMenu(actorId, spellsTab)
-    addDragDrop(actorId, spellListsContainer)
+    addDragDrop(actorId, spellListsElement)
 }
 
 async function addSpellListTabs(
@@ -53,16 +53,15 @@ async function addSpellListTabs(
             { actorId, lists },
         )
 
-    let spellListsContainer = html.querySelector('.spell-lists') as HTMLElement
-    if (spellListsContainer) {
-        spellListsContainer.innerHTML = renderedTemplate
-    } else {
-        spellListsContainer = document.createElement('div')
-        spellListsContainer.innerHTML = renderedTemplate
-        header.after(spellListsContainer)
-    }
+    const spellListsContainer = document.createElement('div')
+    spellListsContainer.innerHTML = renderedTemplate
+    header.after(spellListsContainer)
 
-    return { spellsTab, spellListsContainer }
+    const spellListsElement = spellListsContainer.querySelector(
+        '.spell-lists',
+    ) as HTMLElement
+
+    return { spellsTab, spellListsElement }
 }
 
 function scrollToActiveList(spellListsContainer: HTMLElement) {
@@ -162,7 +161,7 @@ type Centroid = {
 
 type SortableHTMLElement = {
     element: HTMLElement
-    centroid: Centroid
+    centroid: Centroid | null
     distance: number
 }
 
@@ -199,42 +198,58 @@ function intentFrom(e: DragEvent, centroid: Centroid): Intent {
     return e.clientX + window.scrollX < centroid.x ? 'before' : 'after'
 }
 
-function initializeDragData(tabs: SortableHTMLElement[]) {
-    tabs.forEach((tab) => {
-        if (tab.centroid) {
-            return
-        }
-
-        tab.centroid = computeCentroid(tab.element)
-    })
-}
-
-function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
+function initializeDragData(spellListsContainer: HTMLElement) {
     const tabElements = spellListsContainer.querySelectorAll('[draggable]')
     if (tabElements.length <= 1) {
         // Not enough elements to enable re-ordering
-        return
+        return []
     }
 
     const tabs = [...tabElements].map((tab) => ({
         element: tab,
     })) as SortableHTMLElement[]
 
+    return tabs
+}
+
+function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
+    const scrollThreshold = 150
+    const scrollStep = 100
+
+    let tabs: SortableHTMLElement[] = initializeDragData(spellListsContainer)
     let dropData: DropData | null = null
+    let needsToScroll = false
+
+    const scroll = (direction: number) => {
+        const scrollX = spellListsContainer.scrollLeft
+
+        spellListsContainer.scrollTo({
+            left: scrollX + direction * scrollStep,
+            behavior: 'smooth',
+        })
+
+        if (needsToScroll) {
+            setTimeout(() => scroll(direction), 20)
+        }
+    }
 
     spellListsContainer.addEventListener('dragover', (e) => {
         e.preventDefault()
 
-        initializeDragData(tabs)
-
+        // Calculate closest drop target
         const byProximity = tabs
-            .map((tab) => ({
-                ...tab,
-                distance: pageDistanceBetweenPointerAndCentroid(
-                    e,
-                    tab.centroid,
-                ),
-            }))
+            .map((tab) => {
+                const centroid = tab.centroid || computeCentroid(tab.element)
+
+                return {
+                    ...tab,
+                    centroid,
+                    distance: pageDistanceBetweenPointerAndCentroid(
+                        e,
+                        centroid,
+                    ),
+                }
+            })
             .sort((a, b) => a.distance - b.distance)
 
         const closest = byProximity[0]
@@ -249,6 +264,22 @@ function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
         dropData = {
             closest: closest.element,
             intent,
+        }
+
+        // Calculate need for scrolling
+        const rect = spellListsContainer.getBoundingClientRect()
+        const leftBorder = rect.left + window.scrollX
+        const rightBorder = rect.right + window.scrollX
+        const cursorPosition = e.clientX + window.scrollX
+
+        if (cursorPosition - leftBorder < scrollThreshold) {
+            needsToScroll = true
+            scroll(-1)
+        } else if (rightBorder - cursorPosition < scrollThreshold) {
+            needsToScroll = true
+            scroll(1)
+        } else {
+            needsToScroll = false
         }
     })
 
@@ -278,6 +309,10 @@ function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
             return
         }
 
+        if (closest === source) {
+            return
+        }
+
         if (intent === 'before') {
             closest.before(source)
         } else {
@@ -304,6 +339,8 @@ function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
         })
 
         tab.addEventListener('dragend', () => {
+            needsToScroll = false
+
             tab.classList.remove('dragging')
 
             tabs.forEach((tab) =>
@@ -313,6 +350,8 @@ function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
                     'drop-after',
                 ),
             )
+
+            tabs.forEach((tab) => (tab.centroid = null))
         })
     })
 }
