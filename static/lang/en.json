@@ -1,5 +1,32 @@
 {
-    "ModuleTemplate": {
-        "Settings": {}
+  "FSL": {
+    "ui": {
+      "notifications": {
+        "warn": {
+          "exceedsClassPreparedSpells": "Actor \"{actorName}\" is exceeding prepared spell limit for class \"{className}\".",
+          "exceedsPreparedSpellsGeneric": "Actor \"{actorName}\" is exceeding prepared spell limit."
+        }
+      },
+      "forms": {
+        "delete": {
+          "title": "Delete Spell List",
+          "body": "Are you sure you want to delete this spell list?"
+        },
+        "add": {
+          "title": "Add new spell list"
+        }
+      },
+      "contextMenus": {
+        "spellList": {
+          "rename": "Rename Spell List",
+          "copy": "Copy Spell List",
+          "delete": "Delete Spell List"
+        }
+      }
+    },
+    "names": {
+      "defaultSpellListName": "Default",
+      "defaultSpellListCopyName": "{originalName} (Copy)"
     }
+  }
 }

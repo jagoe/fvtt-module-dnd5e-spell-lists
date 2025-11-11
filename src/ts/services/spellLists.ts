@@ -41,7 +41,7 @@ export async function saveSpellLists(
 ): Promise<void> {
     const actor = game.actors?.get(actorId)
     if (!actor) {
-        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+        throw new Error(`Actor with ID ${actorId} not found`)
     }
 
     await actor.setFlag(MODULE_ID, SPELL_LISTS_FLAG, spellLists)
@@ -50,7 +50,7 @@ export async function saveSpellLists(
 export async function getSpellLists(actorId: string): Promise<SpellList[]> {
     const actor = game.actors?.get(actorId)
     if (!actor) {
-        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+        throw new Error(`Actor with ID ${actorId} not found`)
     }
 
     const spellLists = actor.getFlag(MODULE_ID, SPELL_LISTS_FLAG) as
@@ -106,7 +106,7 @@ export async function getSpellList(
     const index = spellLists.findIndex((list) => list.id === spellListId)
     if (index === -1) {
         throw new Error(
-            `Spell list with ID ${spellListId} not found for actor ${actorId}`, // TODO: i18n
+            `Spell list with ID ${spellListId} not found for actor ${actorId}`,
         )
     }
 
@@ -122,7 +122,11 @@ export async function copySpellList(
     const copy = foundry.utils.deepClone(spellList)
 
     copy.id = createId()
-    copy.name = newName || `${spellList.name} (Copy)` // TODO: i18n
+    copy.name =
+        newName ||
+        game.i18n.format('FSL.names.defaultSpellListCopyName', {
+            originalName: spellList.name,
+        })
 
     await saveSpellList(actorId, copy)
 }
@@ -132,20 +136,20 @@ export async function deleteSpellList(
     listId: string,
 ): Promise<void> {
     if (listId === DEFAULT_SPELL_LIST_ID) {
-        throw new Error('Cannot delete the default spell list') // TODO: i18n
+        throw new Error('Cannot delete the default spell list')
     }
 
     const spellLists = await getSpellLists(actorId)
     const listToDelete = await getSpellList(actorId, listId)
     if (!listToDelete) {
         throw new Error(
-            `Spell list with ID ${listId} not found for actor ${actorId}`, // TODO: i18n
+            `Spell list with ID ${listId} not found for actor ${actorId}`,
         )
     }
 
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-        window: { title: 'Delete Spell List' }, // TODO: i18n
-        content: '<p>Are you sure you want to delete this spell list?</p>', // TODO: i18n
+        window: { title: game.i18n.localize('FSL.ui.forms.delete.title') },
+        content: `<p>${game.i18n.localize('FSL.ui.forms.delete.body')}</p>`,
     })
     if (!confirmed) {
         return
@@ -236,9 +240,7 @@ export async function addToSpellList(
     const spellLists = await getSpellLists(actorId)
     const activeList = await getActiveSpellList(actorId)
     if (!activeList) {
-        throw new Error(
-            `No active spell list found for actor ${actorId}`, // TODO: i18n
-        )
+        throw new Error(`No active spell list found for actor ${actorId}`)
     }
 
     activeList.spells = [
@@ -258,9 +260,7 @@ export async function removeFromSpellList(
     const spellLists = await getSpellLists(actorId)
     const activeList = await getActiveSpellList(actorId)
     if (!activeList) {
-        throw new Error(
-            `No active spell list found for actor ${actorId}`, // TODO: i18n
-        )
+        throw new Error(`No active spell list found for actor ${actorId}`)
     }
 
     const index = activeList.spells.findIndex((s) => s.id === spellId)
@@ -356,7 +356,7 @@ export async function resetSpellLists(actorId: string): Promise<void> {
 
     const spellLists: SpellList[] = []
     const defaultList: SpellList = {
-        name: 'Default', // TODO: i18n
+        name: game.i18n.localize('FSL.names.defaultSpellListName'),
         id: DEFAULT_SPELL_LIST_ID,
         isActive: true,
         spells: [],
@@ -368,7 +368,7 @@ export async function resetSpellLists(actorId: string): Promise<void> {
     // TODO: Extract into Foundry data access layer
     const actor = game.actors?.get(actorId)
     if (!actor) {
-        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+        throw new Error(`Actor with ID ${actorId} not found`)
     }
 
     const spells = actor.items
@@ -393,7 +393,7 @@ export async function getMaxPreparedSpells(
 ): Promise<Record<string, number>> {
     const actor = game.actors?.get(actorId)
     if (!actor) {
-        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+        throw new Error(`Actor with ID ${actorId} not found`)
     }
 
     const classes = actor.items.filter(
@@ -417,7 +417,7 @@ export async function getMaxPreparedSpells(
 async function clearSpellLists(actorId: string): Promise<void> {
     const actor = game.actors?.get(actorId)
     if (!actor) {
-        throw new Error(`Actor with ID ${actorId} not found`) // TODO: i18n
+        throw new Error(`Actor with ID ${actorId} not found`)
     }
 
     await actor.setFlag(MODULE_ID, `-=${SPELL_LISTS_FLAG}`, null)

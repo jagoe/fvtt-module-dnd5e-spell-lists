@@ -102,9 +102,15 @@ export async function preUpdateItem(
                     (item as ClassItem).system.identifier === sourceClass,
             )
 
-            // TODO: i18n
             foundry.ui.notifications.warn(
-                `Actor "${actor.name}" is exceeding prepared spell limit for ${actorClass ? `class "${actorClass.name}"` : 'their class.'}.`,
+                'FSL.ui.notifications.warn.exceedsClassPreparedSpells',
+                {
+                    localize: true,
+                    format: {
+                        actorName: actor.name,
+                        className: actorClass?.name,
+                    },
+                },
             )
 
             return false
@@ -117,9 +123,9 @@ export async function preUpdateItem(
         return
     }
 
-    // TODO: i18n
     foundry.ui.notifications.warn(
-        `Actor "${actor.name}" is exceeding prepared spell limit.`,
+        'FSL.ui.notifications.warn.exceedsPreparedSpellsGeneric',
+        { localize: true, format: { actorName: actor.name } },
     )
 
     return false

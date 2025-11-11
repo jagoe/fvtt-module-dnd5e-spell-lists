@@ -96,7 +96,7 @@ export async function promptSpellListName(): Promise<string | null> {
 function addContextMenu(actorId: string, spellsTab: HTMLElement) {
     const contextMenuItems: ContextMenuEntry[] = [
         {
-            name: 'Rename Spell List', // TODO: i18n
+            name: game.i18n.localize('FSL.ui.contextMenus.spellList.rename'),
             icon: '<i class="fas fa-book"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
@@ -113,7 +113,7 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
             },
         },
         {
-            name: 'Copy Spell List', // TODO: i18n
+            name: game.i18n.localize('FSL.ui.contextMenus.spellList.copy'),
             icon: '<i class="fas fa-copy"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
@@ -127,7 +127,7 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
             },
         },
         {
-            name: 'Delete Spell List', // TODO: i18n
+            name: game.i18n.localize('FSL.ui.contextMenus.spellList.delete'),
             icon: '<i class="fas fa-trash"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
