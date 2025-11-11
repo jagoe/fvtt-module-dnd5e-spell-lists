@@ -1,7 +1,4 @@
-import {
-    createEmptySpellList,
-    saveSpellList,
-} from '../../services/spellLists.ts'
+import { SpellListRepository } from '../../services/spellLists/repository.ts'
 import { promptSpellListName } from '../../ui/spellListTabs.ts'
 import { Listener } from '../index.ts'
 
@@ -22,11 +19,12 @@ export const AddSpellList: Listener = {
                 return
             }
 
-            const spellList = createEmptySpellList()
+            const repo = SpellListRepository.forActor(actorId)
 
-            spellList.name = (await promptSpellListName()) || 'New Spell List'
+            const name = (await promptSpellListName()) || 'New Spell List'
 
-            await saveSpellList(actorId, spellList)
+            const created = await repo.create({ name })
+            await repo.activate(created.id)
         })
     },
 }

@@ -1,6 +1,6 @@
 export type SpellList = {
-    name: string
     id: string
+    name: string
     isActive: boolean
     spells: SpellListEntry[]
 }

@@ -5,31 +5,39 @@ import {
     ContextMenuEntry,
     ContextMenuOptions,
 } from '@client/applications/ux/context-menu.mjs'
-import {
-    copySpellList,
-    deleteSpellList,
-    moveSpellList,
-    updateSpellList,
-} from '../services/spellLists.ts'
+import { localize } from '../services/foundry/i18n.ts'
+import { SpellListRepository } from '../services/spellLists/repository.ts'
+import { confirm, prompt } from '../services/foundry/ui.ts'
+import { addDragDropSort } from './dragDropSort.ts'
 
 export async function createOrUpdateSpellListTabs(
     html: HTMLElement,
     actorId: string,
-    lists: SpellList[],
 ): Promise<void> {
-    const { spellsTab, spellListsElement } = await addSpellListTabs(
-        actorId,
-        lists,
-        html,
-    )
+    const repo = SpellListRepository.forActor(actorId)
+    const spellLists = await repo.getAll()
 
-    if (!spellsTab || !spellListsElement) {
+    const createdElements = await addSpellListTabs(actorId, spellLists, html)
+
+    if (!createdElements) {
         return
     }
 
+    const { spellsTab, spellListsElement } = createdElements
+
     scrollToActiveList(spellListsElement)
     addContextMenu(actorId, spellsTab)
-    addDragDrop(actorId, spellListsElement)
+    addDragDropSort(
+        spellListsElement,
+        (container, data) =>
+            container.querySelector(`[data-list-id='${data.identifier}']`),
+        (element) => ({ identifier: element.dataset.listId }),
+        (sourceListId, targetListId, dropRelation) => {
+            const repo = SpellListRepository.forActor(actorId)
+
+            repo.move(sourceListId, dropRelation, targetListId)
+        },
+    )
 }
 
 async function addSpellListTabs(
@@ -44,7 +52,7 @@ async function addSpellListTabs(
 
     if (!header) {
         log.error('Could not find spells tab or header element')
-        return {}
+        return null
     }
 
     const renderedTemplate =
@@ -77,16 +85,18 @@ function scrollToActiveList(spellListsContainer: HTMLElement) {
     }
 }
 
-// TODO: Extract
 export async function promptSpellListName(): Promise<string | null> {
-    const data = await (
-        foundry.applications.api.DialogV2 as unknown as DialogV2WithInput
-    ).input<{ name: string }>({
-        window: { title: 'Spell List Name' },
-        content: `<input type="text" name="name" placeholder="Enter spell list name" />`,
-        ok: {
-            label: 'Update',
-            icon: 'fa-solid fa-floppy-disk',
+    const data = await prompt<{ name: string }>({
+        title: 'FSL.ui.dialogs.spellListName.title',
+        inputs: [
+            {
+                name: 'name',
+                placeholder: 'FSL.ui.dialogs.spellListName.placeholder',
+            },
+        ],
+        okButton: {
+            label: 'FSL.ui.dialogs.save',
+            icon: 'floppy-disk',
         },
     })
 
@@ -96,7 +106,7 @@ export async function promptSpellListName(): Promise<string | null> {
 function addContextMenu(actorId: string, spellsTab: HTMLElement) {
     const contextMenuItems: ContextMenuEntry[] = [
         {
-            name: game.i18n.localize('FSL.ui.contextMenus.spellList.rename'),
+            name: localize('FSL.ui.contextMenus.spellList.rename'),
             icon: '<i class="fas fa-book"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
@@ -109,11 +119,12 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
                     return
                 }
 
-                updateSpellList(actorId, spellListId, { name: spellListName })
+                const repo = SpellListRepository.forActor(actorId)
+                await repo.update({ id: spellListId, name: spellListName })
             },
         },
         {
-            name: game.i18n.localize('FSL.ui.contextMenus.spellList.copy'),
+            name: localize('FSL.ui.contextMenus.spellList.copy'),
             icon: '<i class="fas fa-copy"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
@@ -123,11 +134,12 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
 
                 const spellListName = await promptSpellListName()
 
-                copySpellList(actorId, spellListId, spellListName)
+                const repo = SpellListRepository.forActor(actorId)
+                await repo.copy(spellListId, spellListName)
             },
         },
         {
-            name: game.i18n.localize('FSL.ui.contextMenus.spellList.delete'),
+            name: localize('FSL.ui.contextMenus.spellList.delete'),
             icon: '<i class="fas fa-trash"></i>',
             callback: async (li: HTMLElement) => {
                 const spellListId = li.dataset.listId
@@ -135,10 +147,31 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
                     return
                 }
 
-                deleteSpellList(actorId, spellListId)
+                if (!SpellListRepository.canDeleteSpellList(spellListId)) {
+                    foundry.ui.notifications.warn(
+                        localize(
+                            'FSL.ui.notifications.warn.cannotDeleteDefaultSpellList',
+                        ),
+                    )
+
+                    return
+                }
+
+                const confirmed = await confirm({
+                    title: 'FSL.ui.forms.delete.title',
+                    content: 'FSL.ui.forms.delete.body',
+                })
+
+                if (!confirmed) {
+                    return
+                }
+
+                const repo = SpellListRepository.forActor(actorId)
+                await repo.delete(spellListId)
             },
         },
     ]
+
     const options: ContextMenuOptions = {
         jQuery: false,
         fixed: true,
@@ -150,208 +183,4 @@ function addContextMenu(actorId: string, spellsTab: HTMLElement) {
         contextMenuItems,
         options,
     )
-}
-
-// TODO: Extract to drag/drop lib
-
-type Centroid = {
-    x: number
-    y: number
-}
-
-type SortableHTMLElement = {
-    element: HTMLElement
-    centroid: Centroid | null
-    distance: number
-}
-
-type Intent = 'before' | 'after'
-
-type TransferData = {
-    listId: string
-}
-
-type DropData = {
-    closest: HTMLElement
-    intent: Intent
-}
-
-function computeCentroid(element: Element): Centroid {
-    const rect = element.getBoundingClientRect()
-    const viewportX = (rect.left + rect.right) / 2
-    const viewportY = (rect.top + rect.bottom) / 2
-
-    return { x: viewportX + window.scrollX, y: viewportY + window.scrollY }
-}
-
-function pageDistanceBetweenPointerAndCentroid(
-    e: DragEvent,
-    centroid: Centroid,
-) {
-    return Math.hypot(
-        centroid.x - (e.clientX + window.scrollX),
-        centroid.y - (e.clientY + window.scrollY),
-    )
-}
-
-function intentFrom(e: DragEvent, centroid: Centroid): Intent {
-    return e.clientX + window.scrollX < centroid.x ? 'before' : 'after'
-}
-
-function initializeDragData(spellListsContainer: HTMLElement) {
-    const tabElements = spellListsContainer.querySelectorAll('[draggable]')
-    if (tabElements.length <= 1) {
-        // Not enough elements to enable re-ordering
-        return []
-    }
-
-    const tabs = [...tabElements].map((tab) => ({
-        element: tab,
-    })) as SortableHTMLElement[]
-
-    return tabs
-}
-
-function addDragDrop(actorId: string, spellListsContainer: HTMLElement) {
-    const scrollThreshold = 150
-    const scrollStep = 100
-
-    let tabs: SortableHTMLElement[] = initializeDragData(spellListsContainer)
-    let dropData: DropData | null = null
-    let needsToScroll = false
-
-    const scroll = (direction: number) => {
-        const scrollX = spellListsContainer.scrollLeft
-
-        spellListsContainer.scrollTo({
-            left: scrollX + direction * scrollStep,
-            behavior: 'smooth',
-        })
-
-        if (needsToScroll) {
-            setTimeout(() => scroll(direction), 20)
-        }
-    }
-
-    spellListsContainer.addEventListener('dragover', (e) => {
-        e.preventDefault()
-
-        // Calculate closest drop target
-        const byProximity = tabs
-            .map((tab) => {
-                const centroid = tab.centroid || computeCentroid(tab.element)
-
-                return {
-                    ...tab,
-                    centroid,
-                    distance: pageDistanceBetweenPointerAndCentroid(
-                        e,
-                        centroid,
-                    ),
-                }
-            })
-            .sort((a, b) => a.distance - b.distance)
-
-        const closest = byProximity[0]
-
-        const intent = intentFrom(e, closest.centroid)
-
-        spellListsContainer
-            .querySelector('.drop-target')
-            ?.classList.remove('drop-target', 'drop-before', 'drop-after')
-        closest.element.classList.add('drop-target', `drop-${intent}`)
-
-        dropData = {
-            closest: closest.element,
-            intent,
-        }
-
-        // Calculate need for scrolling
-        const rect = spellListsContainer.getBoundingClientRect()
-        const leftBorder = rect.left + window.scrollX
-        const rightBorder = rect.right + window.scrollX
-        const cursorPosition = e.clientX + window.scrollX
-
-        if (cursorPosition - leftBorder < scrollThreshold) {
-            needsToScroll = true
-            scroll(-1)
-        } else if (rightBorder - cursorPosition < scrollThreshold) {
-            needsToScroll = true
-            scroll(1)
-        } else {
-            needsToScroll = false
-        }
-    })
-
-    spellListsContainer.addEventListener('drop', (e) => {
-        const transferData = e.dataTransfer?.getData('application/json')
-        if (!transferData) {
-            return
-        }
-
-        if (!dropData) {
-            return
-        }
-
-        const { listId }: TransferData = JSON.parse(transferData)
-
-        if (!listId) {
-            return
-        }
-
-        const { closest, intent } = dropData
-
-        const source = spellListsContainer.querySelector(
-            `[data-list-id='${listId}']`,
-        )
-
-        if (!source) {
-            return
-        }
-
-        if (closest === source) {
-            return
-        }
-
-        if (intent === 'before') {
-            closest.before(source)
-        } else {
-            closest.after(source)
-        }
-
-        dropData = null
-
-        const targetListId = closest.dataset.listId
-        moveSpellList(actorId, listId, intent, targetListId ?? '')
-    })
-
-    tabs.forEach(({ element: tab }) => {
-        tab.addEventListener('dragstart', (e) => {
-            if (!e.dataTransfer) {
-                return
-            }
-
-            tab.classList.add('dragging')
-            e.dataTransfer.setData(
-                'application/json',
-                JSON.stringify({ listId: tab.dataset.listId }),
-            )
-        })
-
-        tab.addEventListener('dragend', () => {
-            needsToScroll = false
-
-            tab.classList.remove('dragging')
-
-            tabs.forEach((tab) =>
-                tab.element.classList.remove(
-                    'drop-target',
-                    'drop-before',
-                    'drop-after',
-                ),
-            )
-
-            tabs.forEach((tab) => (tab.centroid = null))
-        })
-    })
 }

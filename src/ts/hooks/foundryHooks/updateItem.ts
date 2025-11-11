@@ -1,9 +1,5 @@
-import { SpellPreparationMode } from '../../constants.ts'
-import {
-    addToSpellList,
-    removeFromAllSpellLists,
-    removeFromSpellList,
-} from '../../services/spellLists.ts'
+import { ItemTypes, SpellPreparationMode } from '../../constants.ts'
+import { SpellListRepository } from '../../services/spellLists/repository.ts'
 import { log } from '../../util/log.ts'
 import { Listener } from '../index.ts'
 
@@ -12,7 +8,7 @@ export const UpdateItem: Listener = {
         Hooks.on(
             'updateItem',
             async (item, changes: Partial<SpellItem>, _operation) => {
-                if (item.type !== 'spell') {
+                if (item.type !== ItemTypes.Spell) {
                     // Ignore non-spells
                     return
                 }
@@ -27,17 +23,19 @@ export const UpdateItem: Listener = {
                     return
                 }
 
+                const repo = SpellListRepository.forActor(actorId)
+
                 const hasSpellTypeChange =
                     changes.system?.method !== undefined ||
                     changes.system?.level !== undefined
 
                 const changesToIrrelevantSpell =
                     changes.system?.method !== 'spell' ||
-                    changes.system?.level === 1
+                    changes.system?.level < 1
 
                 if (hasSpellTypeChange && changesToIrrelevantSpell) {
                     // The spell no longer counts as a prepared spell
-                    await removeFromAllSpellLists(actorId, spell.id)
+                    await repo.removeSpellFromAll(spell.id)
 
                     return
                 }
@@ -61,19 +59,19 @@ export const UpdateItem: Listener = {
                         : changes.system?.prepared
 
                 if (preparedState === SpellPreparationMode.NOT_PREPARED) {
-                    await removeFromSpellList(actorId, spell.id)
+                    await repo.removeSpell(spell.id)
                     return
                 }
 
                 if (preparedState === SpellPreparationMode.PREPARED) {
-                    await addToSpellList(actorId, [
+                    await repo.addSpells([
                         { id: spell.id, sourceClass: spell.system.sourceClass },
                     ])
                     return
                 }
 
                 if (preparedState === SpellPreparationMode.ALWAYS_PREPARED) {
-                    await removeFromAllSpellLists(actorId, spell.id)
+                    await repo.removeSpellFromAll(spell.id)
                     return
                 }
 
