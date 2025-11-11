@@ -4,7 +4,6 @@
 # IDE
 .idea/
 .vs/
-.vscode
 icons/\!dox/
 
 coverage
