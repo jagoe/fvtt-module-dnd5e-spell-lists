@@ -1,11 +1,9 @@
 import { ApplicationRenderOptions } from '@client/applications/_module.mjs'
 import { Listener } from '../index.ts'
 import { createOrUpdateSpellListTabs } from '../../ui/spellListTabs.ts'
-import {
-    canPrepareSpells,
-    getSpellLists,
-    initializeDefaultSpellList,
-} from '../../services/spellLists.ts'
+import { initializeDefaultSpellList } from '../../services/spellLists.ts'
+import { SpellListRepository } from '../../services/spellLists/repository.ts'
+import { actors } from '../../services/foundry/actors.ts'
 
 export const RenderActorSheet: Listener = {
     listen(): void {
@@ -22,18 +20,20 @@ export const RenderActorSheet: Listener = {
                     return
                 }
 
-                const actorCanPrepareSpells = await canPrepareSpells(actorId)
+                const actorCanPrepareSpells = actors.canPrepareSpells(actorId)
 
                 if (!actorCanPrepareSpells) {
                     return
                 }
 
-                let spellLists = await getSpellLists(actorId)
+                const repo = SpellListRepository.forActor(actorId)
+                let spellLists = await repo.getAll()
+
                 if (!spellLists || spellLists.length === 0) {
                     await initializeDefaultSpellList(actorId)
                 }
 
-                await createOrUpdateSpellListTabs(html, actorId, spellLists)
+                await createOrUpdateSpellListTabs(html, actorId)
             },
         )
     },

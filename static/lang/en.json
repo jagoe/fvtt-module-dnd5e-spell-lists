@@ -4,7 +4,9 @@
       "notifications": {
         "warn": {
           "exceedsClassPreparedSpells": "Actor \"{actorName}\" is exceeding prepared spell limit for class \"{className}\".",
-          "exceedsPreparedSpellsGeneric": "Actor \"{actorName}\" is exceeding prepared spell limit."
+          "exceedsPreparedSpellsGeneric": "Actor \"{actorName}\" is exceeding prepared spell limit.",
+          "cannotDeleteDefaultSpellList": "You cannot delete the default spell list.",
+          "exceedsUnknownClassPreparedSpells": "Actor \"{actorName}\" is exceeding prepared spell limit for one of their classes."
         }
       },
       "forms": {
@@ -22,6 +24,13 @@
           "copy": "Copy Spell List",
           "delete": "Delete Spell List"
         }
+      },
+      "dialogs": {
+        "spellListName": {
+          "title": "Spell List Name",
+          "placeholder": "Enter spell list name"
+        },
+        "save": "Save"
       }
     },
     "names": {
