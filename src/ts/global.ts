@@ -152,7 +152,13 @@ declare global {
             name: string
             properties: Set<string>
         }
+        prefs: {
+            collapseSidebar: boolean
+            group: unknown
+            sort: string
+        }
         _applyFilters(): void
+        _applySorting(): void
     }
 
     class Hooks extends HooksType {

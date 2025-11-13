@@ -22,3 +22,9 @@ export enum ItemTypes {
 export enum SpellFilterCategories {
     Prepared = 'prepared',
 }
+
+export enum SpellSortCategories {
+    Alphabetically = 'a',
+    Priority = 'p',
+    Manually = 'm',
+}
