@@ -1,6 +1,8 @@
 import {
     DEFAULT_SPELL_LIST_ID,
     SPELL_LISTS_STORE_PROPERTY,
+    SpellFilterCategories,
+    SpellSortCategories,
 } from '../../constants.ts'
 import { SpellList, SpellListEntry } from '../../models/spellList.ts'
 import { actors } from '../foundry/actors.ts'
@@ -33,15 +35,16 @@ export class SpellListRepository {
     public async create(
         spellList: Partial<Omit<SpellList, 'id' | 'isActive'>>,
     ): Promise<SpellList> {
-        const newSpellList = Object.assign(
-            {
-                name: '',
-                isActive: false,
-                spells: [],
-            },
-            spellList,
-            { id: createId() },
-        )
+        const defaultProperties: SpellList = {
+            id: '',
+            name: '',
+            isActive: false,
+            spells: [],
+        }
+
+        const newSpellList = Object.assign(defaultProperties, spellList, {
+            id: createId(),
+        })
 
         const spellLists = await this.fetch()
         const updated = [...spellLists, newSpellList]
@@ -141,12 +144,21 @@ export class SpellListRepository {
             activeSpellList.spells.map((spell) => spell.id),
         )
 
-        if (activeSpellList.spells.length) {
-            actors.filterSheetForPreparedSpells(
-                this._actor,
-                activeSpellList.id === DEFAULT_SPELL_LIST_ID,
-            )
-        }
+        // Apply automated sorting and filters to make prepared spells more visible
+        actors.applyFilterAndSorting(this._actor, {
+            sort:
+                activeSpellList.id === DEFAULT_SPELL_LIST_ID
+                    ? SpellSortCategories.Alphabetically
+                    : SpellSortCategories.Priority,
+            filter: {
+                properties: new Set(
+                    activeSpellList.id === DEFAULT_SPELL_LIST_ID ||
+                    !activeSpellList.spells.length
+                        ? []
+                        : [SpellFilterCategories.Prepared],
+                ),
+            },
+        })
     }
 
     public async move(

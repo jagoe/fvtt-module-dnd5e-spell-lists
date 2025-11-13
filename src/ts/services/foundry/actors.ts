@@ -1,7 +1,6 @@
 import {
     IGNORE_SPELL_LIMIT_CHECK_KEY,
     ItemTypes,
-    SpellFilterCategories,
     SpellPreparationMode,
 } from '../../constants.ts'
 
@@ -109,9 +108,12 @@ async function unprepareAllSpells(actor: Actor): Promise<void> {
     await actor.updateEmbeddedDocuments('Item', spells)
 }
 
-function filterSheetForPreparedSpells(
+function applyFilterAndSorting(
     actor: Actor,
-    shouldFilterForPreparedSpells: boolean,
+    options: {
+        filter?: Partial<FilterListControls['state']>
+        sort?: Partial<FilterListControls['prefs']['sort']>
+    },
 ): void {
     const actorSheet = actor.sheet?.element as unknown as HTMLElement
 
@@ -119,11 +121,22 @@ function filterSheetForPreparedSpells(
         'item-list-controls[for=spells]',
     ) as FilterListControls
 
-    filter.state.properties = new Set(
-        shouldFilterForPreparedSpells ? [] : [SpellFilterCategories.Prepared],
-    )
+    if (options.filter) {
+        if (options.filter.properties) {
+            filter.state.properties = options.filter.properties
+        }
+
+        if (options.filter.name) {
+            filter.state.name = options.filter.name
+        }
+    }
+
+    if (options.sort) {
+        filter.prefs.sort = options.sort
+    }
 
     filter._applyFilters()
+    filter._applySorting()
 }
 
 function getClass(actor: Actor, classId: string): ClassItem | undefined {
@@ -141,7 +154,7 @@ export const actors = {
     canPrepareSpells,
     getCurrentlyPreparedSpells,
     getMaxPreparedSpells,
-    filterSheetForPreparedSpells,
+    applyFilterAndSorting,
     setPreparedSpells,
     unprepareAllSpells,
 }
