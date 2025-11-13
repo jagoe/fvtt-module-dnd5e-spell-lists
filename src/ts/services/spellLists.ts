@@ -1,3 +1,4 @@
+import { DEFAULT_SPELL_LIST_ID } from '../constants.ts'
 import { actors } from './foundry/actors.ts'
 import { SpellListRepository } from './spellLists/repository.ts'
 
@@ -16,6 +17,7 @@ export async function initializeDefaultSpellList(
 
     await repo.reset()
     await repo.addSpells(currentlyPreparedSpells)
+    await repo.activate(DEFAULT_SPELL_LIST_ID)
 }
 
 export async function resetEverything(): Promise<void> {
