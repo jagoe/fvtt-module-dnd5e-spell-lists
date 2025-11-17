@@ -1,65 +1,55 @@
-import type { DatabaseUpdateOperation } from '@common/abstract/_module.mjs'
 import { ItemTypes, SpellPreparationMode } from '../../constants.ts'
 import { log } from '../../util/log.ts'
-import { actors } from '../../services/foundry/actors.ts'
-import { SpellListRepository } from '../../services/spellLists/repository.ts'
+import { SpellListRepository } from '../spellLists/repository.ts'
+import { actors } from './actors.ts'
 
-export async function preUpdateItem(
-    this: SpellItem,
-    wrapped: (
-        changes: Partial<SpellItem>,
-        options: DatabaseUpdateOperation<Item>,
-        user: User,
-    ) => Promise<boolean | undefined>,
+async function exceedsPreparedSpellLimit(
+    spell: SpellItem,
     changes: Partial<SpellItem>,
-    options: DatabaseUpdateOperation<Item>,
-    user: User,
-): Promise<boolean | undefined> {
-    const next = () => wrapped(changes, options, user)
-
+): Promise<boolean> {
     if (changes?.type !== ItemTypes.Spell) {
         // Ignore non-spells
-        return next()
+        return false
     }
 
-    if (this.system.level < 1) {
+    if (spell.system.level < 1) {
         // Ignore cantrips
-        return next()
+        return false
     }
 
     if (changes.system?.prepared === undefined) {
         // Ignore changes that don't affect the prepared state
-        return next()
+        return false
     }
 
     if (changes.system.prepared !== SpellPreparationMode.PREPARED) {
         // Only handle preparing spells here
-        return next()
+        return false
     }
 
     if (changes.ignoreSpellLimitCheck === true) {
         // Ignore if the spell change should be ignored by this check
 
         delete changes.ignoreSpellLimitCheck
-        return next()
+        return false
     }
 
-    const actorId = this.parent?.id
+    const actorId = spell.parent?.id
     if (!actorId) {
         log.warn(
-            `Spell ${this.name} has no parent actor, cannot update spell list`,
+            `Spell ${spell.name} has no parent actor, cannot update spell list`,
         )
 
-        return next()
+        return false
     }
 
     const actor = game.actors.get(actorId)
     if (!actor) {
         log.warn(
-            `Actor with ID ${actorId} not found, cannot update spell list for spell ${this.name}`,
+            `Actor with ID ${actorId} not found, cannot update spell list for spell ${spell.name}`,
         )
 
-        return next()
+        return false
     }
 
     const repo = SpellListRepository.forActor(actorId)
@@ -75,13 +65,13 @@ export async function preUpdateItem(
         log.warn(
             `No active spell list for actor ${actor.name}, cannot enforce prepared spell limits`,
         )
-        return next()
+        return false
     }
 
-    if (activeSpellList.spells.some((spell) => spell.id === this.id)) {
+    if (activeSpellList.spells.some((spell) => spell.id === spell.id)) {
         // Ignore, if the spell is already on the current list
 
-        return next()
+        return false
     }
 
     for (const sourceClass of Object.keys(maxPreparedSpells)) {
@@ -125,7 +115,7 @@ export async function preUpdateItem(
 
     if (activeSpellList.spells.length < totalMaxPreparedSpells) {
         // Within limits
-        return next()
+        return false
     }
 
     foundry.ui.notifications.warn(
@@ -135,4 +125,8 @@ export async function preUpdateItem(
 
     // Prevent updating the spell
     return false
+}
+
+export const items = {
+    exceedsPreparedSpellLimit,
 }

@@ -40,6 +40,10 @@ export class SpellListRepository {
             name: '',
             isActive: false,
             spells: [],
+            displayOptions: {
+                filter: [SpellFilterCategories.Prepared],
+                sort: SpellSortCategories.Priority,
+            },
         }
 
         const newSpellList = Object.assign(defaultProperties, spellList, {
@@ -144,19 +148,11 @@ export class SpellListRepository {
             activeSpellList.spells.map((spell) => spell.id),
         )
 
-        // Apply automated sorting and filters to make prepared spells more visible
         actors.applyFilterAndSorting(this._actor, {
-            sort:
-                activeSpellList.id === DEFAULT_SPELL_LIST_ID
-                    ? SpellSortCategories.Alphabetically
-                    : SpellSortCategories.Priority,
+            sort: activeSpellList.displayOptions?.sort,
             filter: {
-                properties: new Set(
-                    activeSpellList.id === DEFAULT_SPELL_LIST_ID ||
-                    !activeSpellList.spells.length
-                        ? []
-                        : [SpellFilterCategories.Prepared],
-                ),
+                properties: new Set(activeSpellList.displayOptions?.filter),
+                name: activeSpellList.displayOptions?.search ?? '',
             },
         })
     }
