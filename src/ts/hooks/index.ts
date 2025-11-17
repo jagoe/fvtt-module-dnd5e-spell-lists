@@ -4,6 +4,7 @@ import { Setup } from './foundryHooks/setup.ts'
 import { UpdateItem } from './foundryHooks/updateItem.ts'
 import { ActivateSpellList } from './uiEvents/activateSpellList.ts'
 import { AddSpellList } from './uiEvents/addSpellList.ts'
+import { OnFilterSpells } from './uiEvents/onSpellFilter.ts'
 
 interface Listener {
     listen(): void
@@ -21,6 +22,7 @@ const HooksModule: Listener = {
             // UI events
             AddSpellList,
             ActivateSpellList,
+            OnFilterSpells,
         ]
 
         for (const listener of listeners) {

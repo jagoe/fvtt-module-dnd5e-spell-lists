@@ -111,27 +111,31 @@ async function unprepareAllSpells(actor: Actor): Promise<void> {
 function applyFilterAndSorting(
     actor: Actor,
     options: {
-        filter?: Partial<FilterListControls['state']>
-        sort?: Partial<FilterListControls['prefs']['sort']>
+        filter?: Partial<ItemListControls['state']>
+        sort?: Partial<ItemListControls['prefs']['sort']>
     },
 ): void {
     const actorSheet = actor.sheet?.element as unknown as HTMLElement
 
     const filter = actorSheet.querySelector(
         'item-list-controls[for=spells]',
-    ) as FilterListControls
+    ) as ItemListControls
 
-    if (options.filter) {
-        if (options.filter.properties) {
-            filter.state.properties = options.filter.properties
-        }
-
-        if (options.filter.name) {
-            filter.state.name = options.filter.name
-        }
+    if (
+        options.filter?.properties &&
+        !options.filter?.properties.equals(filter.state.properties)
+    ) {
+        filter.state.properties = options.filter?.properties
     }
 
-    if (options.sort) {
+    if (
+        options.filter?.name !== undefined &&
+        options.filter?.name !== filter.state.name
+    ) {
+        filter.state.name = options.filter?.name
+    }
+
+    if (options.sort && options.sort !== filter.prefs.sort) {
         filter.prefs.sort = options.sort
     }
 

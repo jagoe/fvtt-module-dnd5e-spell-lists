@@ -12,6 +12,8 @@ The module uses system information to automatically determine if a character can
 
 ### Create new spell lists
 
+Sort and filter for prepared spells by default
+
 ### Rename spell lists
 
 ### Delete spell lists
@@ -22,7 +24,7 @@ The module uses system information to automatically determine if a character can
 
 ### Respect maximum number of prepared spells
 
-### Remember filter & sorting options
+### Remember filtering and sorting for spell lists
 
 ## Caveats
 

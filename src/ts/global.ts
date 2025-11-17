@@ -54,11 +54,17 @@ import type {
     HookParamsUpdateWorldTime,
     HooksParamsPreUpdateCombat,
 } from '@client/helpers/hooks.d.mts'
-import type { FoundryUI } from '@client/ui.d.mts'
 import { ApplicationV2 } from '@client/applications/api/_module.mjs'
-import { ApplicationRenderContext } from '@client/applications/_module.mjs'
+import {
+    ApplicationConfiguration,
+    ApplicationRenderContext,
+} from '@client/applications/_module.mjs'
 import type ItemClass from '@client/documents/item.d.mts'
-import { SpellPreparationMode } from './constants.ts'
+import {
+    SpellFilterCategories,
+    SpellPreparationMode,
+    SpellSortCategories,
+} from './constants.ts'
 import { DatabaseUpdateOperation } from '@common/abstract/_module.mjs'
 
 type ConfiguredConfig = Config<
@@ -147,15 +153,23 @@ declare global {
         type: 'class'
     }
 
-    type FilterListControls = HTMLElement & {
+    type ItemListControls = HTMLElement & {
+        app: ApplicationV2 & {
+            options: ApplicationConfiguration & {
+                document: foundry.abstract.Document
+            }
+        }
         state: {
             name: string
-            properties: Set<string>
+            properties: Set<SpellFilterCategories>
         }
         prefs: {
             collapseSidebar: boolean
             group: unknown
-            sort: string
+            sort: SpellSortCategories
+        }
+        _controls: {
+            sort?: HTMLElement
         }
         _applyFilters(): void
         _applySorting(): void
@@ -255,6 +269,41 @@ declare global {
         ): number
 
         static on(...args: HookParameters<string, unknown[]>): number
+    }
+
+    interface FoundryUI<
+        TActorDirectory extends
+            foundry.applications.sidebar.tabs.ActorDirectory,
+        TItemDirectory extends foundry.applications.sidebar.tabs.ItemDirectory,
+        TChatLog extends foundry.applications.sidebar.tabs.ChatLog,
+        TCompendiumDirectory extends
+            foundry.applications.sidebar.tabs.CompendiumDirectory,
+        TCombatTracker extends foundry.applications.sidebar.tabs.CombatTracker,
+        THotbar extends foundry.applications.ui.Hotbar<Macro>,
+    > {
+        actors: TActorDirectory
+        cards: foundry.applications.sidebar.tabs.CardsDirectory
+        chat: TChatLog
+        combat: TCombatTracker
+        compendium: TCompendiumDirectory
+        context: foundry.applications.ux.ContextMenu
+        controls: foundry.applications.ui.SceneControls
+        hotbar: THotbar
+        items: TItemDirectory
+        journal: foundry.applications.sidebar.tabs.JournalDirectory
+        macros: foundry.applications.sidebar.tabs.MacroDirectory
+        menu: foundry.applications.ui.MainMenu
+        nav: foundry.applications.ui.SceneNavigation
+        notifications: foundry.applications.ui.Notifications
+        pause: foundry.applications.ui.GamePause
+        players: foundry.applications.ui.Players
+        playlists: foundry.applications.sidebar.tabs.PlaylistDirectory
+        scenes: foundry.applications.sidebar.tabs.SceneDirectory
+        settings: foundry.applications.sidebar.tabs.Settings
+        sidebar: foundry.applications.sidebar.Sidebar
+        tables: foundry.applications.sidebar.tabs.RollTableDirectory
+        webrtc: foundry.applications.apps.av.CameraViews
+        windows: Record<string, foundry.appv1.api.Application>
     }
 
     namespace globalThis {
